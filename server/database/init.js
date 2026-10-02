@@ -494,6 +494,15 @@ function initDatabase(dbPath) {
     );
 
     -- Homepage Content
+    
+    CREATE TABLE IF NOT EXISTS page_analytics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      page_path TEXT NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS homepage_content (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       section TEXT NOT NULL UNIQUE,

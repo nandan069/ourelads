@@ -49,6 +49,26 @@ const contactLimiter = rateLimit({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+
+// ─── PAGE ANALYTICS TRACKING MIDDLEWARE ───
+app.use((req, res, next) => {
+  if (req.method === "GET" && !req.path.startsWith("/api") && !req.path.startsWith("/admin")) {
+    const isStaticAsset = req.path.match(/\.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|map|json)$/i) || req.path.startsWith("/uploads");
+    if (!isStaticAsset) {
+      try {
+        const cleanPath = (req.path === "/" || req.path === "") ? "/index.html" : req.path;
+        const ip = req.headers["x-forwarded-for"] ? req.headers["x-forwarded-for"].split(",")[0].trim() : (req.ip || "");
+        db.prepare("INSERT INTO page_analytics (page_path, ip_address, user_agent) VALUES (?, ?, ?)").run(
+          cleanPath,
+          ip,
+          req.headers["user-agent"] || ""
+        );
+      } catch (e) {}
+    }
+  }
+  next();
+});
+
 // ─── STATIC FILES ───
 app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '1d' }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads'), { maxAge: '7d' }));

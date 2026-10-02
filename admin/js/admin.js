@@ -190,6 +190,7 @@ async function showAdmin() {
 const NAV_ITEMS = [
   { section: 'DASHBOARD', items: [
     { id: 'dashboard', icon: '📊', label: 'Overview' },
+    { id: 'analytics', icon: '📈', label: 'Traffic & Analytics' },
   ]},
   { section: 'PAGES & WEBSITE', items: [
     { id: 'homepage', icon: '🏠', label: 'Homepage Content' },
@@ -253,6 +254,7 @@ async function navigate(page) {
 
   const friendlyNames = {
     dashboard: 'Dashboard Overview',
+    analytics: 'Traffic & Website Analytics',
     homepage: 'Homepage Sections',
     pages: 'Pages',
     navigation: 'Menu & Navigation',
@@ -282,6 +284,7 @@ async function navigate(page) {
   try {
     switch (page) {
       case 'dashboard': await renderDashboard(content); break;
+      case 'analytics': await renderAnalyticsPage(content); break;
       case 'clients': await renderCrudPage(content, 'clients', 'Client Logos', clientFields()); break;
       case 'projects': await renderCrudPage(content, 'projects', 'Portfolio Projects', projectFields()); break;
       case 'reels': await renderCrudPage(content, 'reels', 'Video Reels', reelFields()); break;
@@ -1245,3 +1248,158 @@ window.uploadDirectFromPicker = uploadDirectFromPicker;
 
 // Check authentication status on startup
 checkAuth();
+
+
+// ═══════════════════════════════════════════
+// ANALYTICS & TRAFFIC DASHBOARD WITH GRAPHS
+// ═══════════════════════════════════════════
+async function renderAnalyticsPage(container) {
+  container.innerHTML = '<div class="loading-state">Loading real-time website analytics...</div>';
+  try {
+    const res = await apiFetch('/admin/analytics/overview');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load analytics');
+
+    const summary = data.summary || { total_views: 0, today_views: 0, unique_visitors: 0, total_leads: 0 };
+    const dailyStats = data.dailyStats || [];
+    const topPages = data.topPages || [];
+
+    const labels = dailyStats.length ? dailyStats.map(d => d.date) : ['Today'];
+    const viewsData = dailyStats.length ? dailyStats.map(d => d.views) : [summary.today_views];
+    const visitorsData = dailyStats.length ? dailyStats.map(d => d.visitors) : [summary.unique_visitors];
+
+    container.innerHTML = `
+      <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+        <div class="stat-card stat-primary" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">👁️ Total Page Views</div>
+          <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--text-primary);margin:6px 0">${summary.total_views}</div>
+          <small style="color:var(--accent)">All time page impressions</small>
+        </div>
+        <div class="stat-card stat-success" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">⚡ Today's Views</div>
+          <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--success);margin:6px 0">${summary.today_views}</div>
+          <small style="color:var(--success)">Live visits today</small>
+        </div>
+        <div class="stat-card stat-info" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">👤 Unique Visitors</div>
+          <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--info);margin:6px 0">${summary.unique_visitors}</div>
+          <small style="color:var(--info)">Distinct IP devices</small>
+        </div>
+        <div class="stat-card stat-warning" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">📬 Total Inquiries</div>
+          <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--warning);margin:6px 0">${summary.total_leads}</div>
+          <small style="color:var(--warning)">Leads from contact form</small>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px">
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700">📈 Traffic & Visitor Trend (Last 14 Days)</h3>
+            <a href="https://analytics.google.com" target="_blank" class="btn btn-ghost btn-xs">Open Google Analytics ↗</a>
+          </div>
+          <div style="position:relative;height:280px">
+            <canvas id="trafficTrendChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="card-header" style="margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700">🔥 Most Visited Pages</h3>
+          </div>
+          <div style="position:relative;height:280px">
+            <canvas id="topPagesChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="card-header" style="margin-bottom:16px"><h3 style="font-size:16px;font-weight:700">📊 Page Views Breakdown</h3></div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Page URL Path</th><th style="text-align:right">Views Count</th></tr></thead>
+              <tbody>
+                ${topPages.length ? topPages.map(p => `
+                  <tr>
+                    <td><code>${p.page_path}</code></td>
+                    <td style="text-align:right"><strong>${p.views}</strong></td>
+                  </tr>
+                `).join('') : '<tr><td colspan="2">No page views recorded yet. Visit website pages to test!</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+          <div class="card-header" style="margin-bottom:12px"><h3 style="font-size:16px;font-weight:700">🔗 Google Analytics Integration</h3></div>
+          <p style="color:var(--text-muted);font-size:14px;line-height:1.6;margin-bottom:16px">
+            Google Analytics (GA4) Tag <code>${data.ga_id}</code> is active across all website pages. You can view real-time live users, demography, and traffic acquisition channels on Google Analytics.
+          </p>
+          <a href="https://analytics.google.com" target="_blank" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px">
+            <span>📊 Open Full Google Analytics Dashboard</span> ↗
+          </a>
+        </div>
+      </div>
+    `;
+
+    if (typeof Chart !== 'undefined') {
+      const ctx1 = document.getElementById('trafficTrendChart');
+      if (ctx1) {
+        new Chart(ctx1, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Page Views',
+                data: viewsData,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.3
+              },
+              {
+                label: 'Unique Visitors',
+                data: visitorsData,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+          }
+        });
+      }
+
+      const ctx2 = document.getElementById('topPagesChart');
+      if (ctx2) {
+        new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: topPages.map(p => p.page_path.replace('.html', '').replace('/', '') || 'home'),
+            datasets: [{
+              label: 'Views',
+              data: topPages.map(p => p.views),
+              backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#64748b']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+          }
+        });
+      }
+    }
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>${err.message}</h3></div>`;
+  }
+}

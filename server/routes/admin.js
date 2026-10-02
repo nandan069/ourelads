@@ -394,6 +394,54 @@ function adminRoutes(db) {
     res.json({ data: JSON.parse(rev.data), message: 'Revision data returned for restore' });
   });
 
+
+  // ─── ANALYTICS OVERVIEW ───
+  router.get("/analytics/overview", (req, res) => {
+    try {
+      const totalViews = db.prepare("SELECT COUNT(*) as c FROM page_analytics").get().c;
+      const todayViews = db.prepare("SELECT COUNT(*) as c FROM page_analytics WHERE date(created_at) = date('now')").get().c;
+      const uniqueVisitors = db.prepare("SELECT COUNT(DISTINCT ip_address) as c FROM page_analytics").get().c;
+      const totalLeads = db.prepare("SELECT COUNT(*) as c FROM contact_submissions").get().c;
+
+      const dailyStats = db.prepare(`
+        SELECT date(created_at) as date, COUNT(*) as views, COUNT(DISTINCT ip_address) as visitors
+        FROM page_analytics
+        WHERE created_at >= date('now', '-14 days')
+        GROUP BY date(created_at)
+        ORDER BY date(created_at) ASC
+      `).all();
+
+      const topPages = db.prepare(`
+        SELECT page_path, COUNT(*) as views
+        FROM page_analytics
+        GROUP BY page_path
+        ORDER BY views DESC
+        LIMIT 10
+      `).all();
+
+      const leadsByStatus = db.prepare(`
+        SELECT status, COUNT(*) as count
+        FROM contact_submissions
+        GROUP BY status
+      `).all();
+
+      res.json({
+        summary: {
+          total_views: totalViews,
+          today_views: todayViews,
+          unique_visitors: uniqueVisitors,
+          total_leads: totalLeads
+        },
+        dailyStats,
+        topPages,
+        leadsByStatus,
+        ga_id: process.env.GOOGLE_ANALYTICS_ID || "G-D2VRBPMM23"
+      });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch analytics: " + err.message });
+    }
+  });
+
   // ─── DASHBOARD STATS ───
   router.get('/dashboard', (req, res) => {
     const totalLeads = db.prepare('SELECT COUNT(*) as c FROM contact_submissions').get().c;
