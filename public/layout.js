@@ -85,7 +85,7 @@
             </div>
             <div class="footer-col">
               <div class="footer-col-title">Connect</div>
-              <a href="mailto:officialourelads@gmail.com">officialourelads@gmail.com</a>
+              <a href="mailto:info@ourelads.com">info@ourelads.com</a>
               <a href="tel:+918076292036">+91 80762 92036</a>
               <a href="https://wa.me/918076292036" target="_blank" rel="noopener">WhatsApp →</a>
               <a href="${instagram}" target="_blank" rel="noopener">Instagram</a>

@@ -639,7 +639,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const body = encodeURIComponent(
         `Name: ${name}\nCompany: ${company}\nEmail: ${email}\nPhone: ${phone}\nService: ${service}\nBudget: ${budget}\n\n${message}`
       );
-      window.location.href = `mailto:officialourelads@gmail.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:info@ourelads.com?subject=${subject}&body=${body}`;
       form.reset();
       if (success) success.hidden = false;
       setTimeout(() => { if (success) success.hidden = true; }, 5000);

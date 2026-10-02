@@ -230,7 +230,7 @@ function publicRoutes(db) {
         const host = process.env.SMTP_HOST || "smtp.titan.email";
         const user = process.env.SMTP_USER || "info@ourelads.com";
         const pass = process.env.SMTP_PASS || "Info@ourelads.com";
-        const notifyEmail = process.env.NOTIFY_EMAIL || "officialourelads@gmail.com";
+        const notifyEmail = process.env.NOTIFY_EMAIL || "info@ourelads.com";
 
         if (host && user && pass) {
           const transporter = nodemailer.createTransport({
