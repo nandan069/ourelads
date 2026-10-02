@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Ourel Ads</title>
+  <meta name="description" content="Start a project with Ourel Ads. Email officialourelads@gmail.com or WhatsApp. New Delhi and Bhopal." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="contact">
+  <div id="site-header"></div>
+  <main id="main-content">
+  <section class="page-hero">
+    <div class="page-hero-bg">
+      <img src="hero_bg.jpg" alt="" />
+      <div class="page-hero-overlay"></div>
+    </div>
+    <div class="page-hero-content container">
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-line"></span>
+        <span class="hero-eyebrow-text">Get in touch</span>
+      </div>
+      <h1>Have a brand to build?<br /><em>Let’s talk.</em></h1>
+      <p class="page-lead">Write to us, call, or message on WhatsApp. Studios in New Delhi and MP Nagar, Bhopal.</p>
+    </div>
+  </section>
+  <section class="contact-section" id="contact" style="padding-top:5rem">
+    <div class="container contact-grid">
+      <div class="contact-left" data-animate="fade-right">
+        <div class="contact-details">
+          <div class="contact-detail-item">
+            <div class="cd-label">Email</div>
+            <a href="mailto:officialourelads@gmail.com" class="cd-value">officialourelads@gmail.com</a>
+          </div>
+          <div class="contact-detail-item">
+            <div class="cd-label">Phone</div>
+            <a href="tel:+918076292036" class="cd-value">+91 80762 92036</a>
+          </div>
+          <div class="contact-detail-item">
+            <div class="cd-label">WhatsApp</div>
+            <a href="https://wa.me/918076292036" class="cd-value" target="_blank" rel="noopener">Message us →</a>
+          </div>
+          <div class="contact-detail-item">
+            <div class="cd-label">Instagram</div>
+            <a href="https://www.instagram.com/ourelads" class="cd-value" target="_blank" rel="noopener">@ourelads</a>
+          </div>
+          <div class="contact-detail-item">
+            <div class="cd-label">LinkedIn</div>
+            <a href="https://www.linkedin.com/company/ourel-ads" class="cd-value" target="_blank" rel="noopener">Ourel Ads</a>
+          </div>
+          <div class="contact-detail-item">
+            <div class="cd-label">Headquarters</div>
+            <div class="cd-value">New Delhi, India<br /><span class="cd-sub">PIN 110034</span></div>
+          </div>
+          <div class="contact-detail-item">
+            <div class="cd-label">Branch Office</div>
+            <div class="cd-value">MP Nagar, Bhopal, Madhya Pradesh</div>
+          </div>
+        </div>
+      </div>
+      <div class="contact-right" data-animate="fade-left">
+        <form class="contact-form" id="contact-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="form-name">Name *</label>
+              <input type="text" id="form-name" name="name" placeholder="Your name" required aria-required="true" />
+            </div>
+            <div class="form-group">
+              <label for="form-company">Company</label>
+              <input type="text" id="form-company" name="company" placeholder="Your company" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="form-email">Email *</label>
+              <input type="email" id="form-email" name="email" placeholder="your@email.com" required aria-required="true" />
+            </div>
+            <div class="form-group">
+              <label for="form-phone">Phone</label>
+              <input type="tel" id="form-phone" name="phone" placeholder="+91 00000 00000" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="form-need">What do you need?</label>
+            <select id="form-need" name="need">
+              <option value="">Select a service</option>
+              <option value="brand-film">Brand Film / TVC</option>
+              <option value="performance">Performance Marketing Video</option>
+              <option value="micro-drama">Micro-Drama / Storytelling</option>
+              <option value="social">Social Media Content</option>
+              <option value="motion">Motion Graphics</option>
+              <option value="digital">Digital Marketing</option>
+              <option value="full">Full Creative Production</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-budget">Approximate Budget</label>
+            <select id="form-budget" name="budget">
+              <option value="">Select range</option>
+              <option value="under-1l">Under ₹1 Lakh</option>
+              <option value="1-5l">₹1 – ₹5 Lakh</option>
+              <option value="5-15l">₹5 – ₹15 Lakh</option>
+              <option value="15-50l">₹15 – ₹50 Lakh</option>
+              <option value="50l-plus">₹50 Lakh+</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-message">Message</label>
+            <textarea id="form-message" name="message" rows="4" placeholder="Tell us about your project..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-purple btn-full" id="form-submit">START A CONVERSATION →</button>
+          <div class="form-error" id="form-error" role="alert" hidden style="color: red; margin-top: 1rem;"></div>
+          <div class="form-success" id="form-success" aria-live="polite" hidden>
+            <span>✓</span> Opening your email client…
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="maps-row container" data-animate="fade-up">
+      <div class="map-card">
+        <div class="map-label">📍 New Delhi — Headquarters</div>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.83923192776!2d77.06889754725782!3d28.52758200617607!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1695000000000!5m2!1sen!2sin" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ourel Ads New Delhi Office"></iframe>
+      </div>
+      <div class="map-card">
+        <div class="map-label">📍 Bhopal — MP Nagar</div>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58827.63847454887!2d77.3630782!3d23.2110688!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x397c4296aa060e41%3A0xe5d39bfed03d0b70!2sMP%20Nagar%2C%20Bhopal%2C%20Madhya%20Pradesh!5e0!3m2!1sen!2sin!4v1695000000001!5m2!1sen!2sin" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ourel Ads Bhopal Office"></iframe>
+      </div>
+    </div>
+  </section>
+
+    </main>
+  <div id="site-footer"></div>
+  <script src="layout.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

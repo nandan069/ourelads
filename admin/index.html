@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ourel Ads — Admin Panel</title>
+  <link rel="icon" href="/assets/logo.jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="/assets/logo.jpeg" alt="Ourel Ads">
+        <h1>OUREL ADS</h1>
+        <p>Content Management System</p>
+      </div>
+      <form id="loginForm" autocomplete="on">
+        <div class="form-group">
+          <label for="loginUsername">Username or Email</label>
+          <input type="text" id="loginUsername" name="username" required placeholder="Enter username" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" name="password" required placeholder="Enter password" autocomplete="current-password">
+        </div>
+        <div id="loginError" class="login-error" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN LAYOUT -->
+  <div id="adminLayout" class="admin-layout" style="display:none">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <img src="/assets/logo.jpeg" alt="Ourel Ads" class="sidebar-logo">
+        <span class="sidebar-title">OUREL ADS</span>
+        <button class="sidebar-close" id="sidebarClose">✕</button>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebarUser"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="topbar-toggle" id="sidebarToggle">☰</button>
+          <div class="breadcrumbs" id="breadcrumbs"></div>
+        </div>
+        <div class="topbar-right">
+          <a href="/" target="_blank" class="btn btn-ghost btn-sm">View Site ↗</a>
+          <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT -->
+      <div class="page-content" id="pageContent">
+        <div class="loading-state">Loading...</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirmModal" class="modal" style="display:none">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-sm">
+      <h3 id="confirmTitle">Confirm</h3>
+      <p id="confirmMessage">Are you sure?</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+        <button class="btn btn-danger" id="confirmOk">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR MODAL -->
+  <div id="editorModal" class="modal" style="display:none">
+    <div class="modal-overlay" onclick="closeEditorModal()"></div>
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 id="editorTitle">Edit</h3>
+        <button class="modal-close" onclick="closeEditorModal()">✕</button>
+      </div>
+      <div class="modal-body" id="editorBody"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeEditorModal()">Cancel</button>
+        <button class="btn btn-primary" id="editorSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDIA PICKER MODAL -->
+  <div id="mediaPickerModal" class="modal" style="display:none">
+    <div class="modal-overlay" onclick="closeMediaPickerModal()"></div>
+    <div class="modal-content modal-md">
+      <div class="modal-header">
+        <h3>📷 Choose Image from Media Library</h3>
+        <button class="modal-close" onclick="closeMediaPickerModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="toolbar" style="margin-bottom:12px">
+          <label class="btn btn-primary btn-sm" style="cursor:pointer">
+            + Upload New Image
+            <input type="file" id="pickerDirectUpload" style="display:none" accept="image/*" onchange="uploadDirectFromPicker(this)">
+          </label>
+        </div>
+        <div id="mediaPickerGrid" class="media-picker-grid">
+          <div class="loading-state">Loading library images...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/js/admin.js"></script>
+</body>
+</html>
