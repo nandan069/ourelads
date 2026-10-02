@@ -217,8 +217,49 @@ function publicRoutes(db) {
       const cleanEmail = String(email).trim().toLowerCase();
       const cleanMessage = sanitize(message);
 
+      const cleanPhone = sanitize(phone);
+      const cleanCompany = sanitize(company);
+      const cleanService = sanitize(service);
+      const cleanBudget = sanitize(budget);
+
       const result = db.prepare('INSERT INTO contact_submissions (name, email, phone, company, service, budget, message, source_page, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        .run(cleanName, cleanEmail, sanitize(phone), sanitize(company), sanitize(service), sanitize(budget), cleanMessage, sanitize(req.headers.referer || 'contact'), req.ip);
+        .run(cleanName, cleanEmail, cleanPhone, cleanCompany, cleanService, cleanBudget, cleanMessage, sanitize(req.headers.referer || 'contact'), req.ip);
+
+      try {
+        const nodemailer = require("nodemailer");
+        const host = process.env.SMTP_HOST || "smtp.titan.email";
+        const user = process.env.SMTP_USER || "info@ourelads.com";
+        const pass = process.env.SMTP_PASS || "Info@ourelads.com";
+        const notifyEmail = process.env.NOTIFY_EMAIL || "officialourelads@gmail.com";
+
+        if (host && user && pass) {
+          const transporter = nodemailer.createTransport({
+            host,
+            port: parseInt(process.env.SMTP_PORT, 10) || 465,
+            secure: true,
+            auth: { user, pass }
+          });
+          transporter.sendMail({
+            from: `"Ourel Ads Website" <${user}>`,
+            to: [user, notifyEmail].join(","),
+            subject: `🔥 New Lead Inquiry from ${cleanName}`,
+            html: `
+              <h2>New Project Lead Received on Ourel Ads</h2>
+              <p><strong>Name:</strong> ${cleanName}</p>
+              <p><strong>Email:</strong> <a href="mailto:${cleanEmail}">${cleanEmail}</a></p>
+              <p><strong>Phone:</strong> ${cleanPhone || "N/A"}</p>
+              <p><strong>Company:</strong> ${cleanCompany || "N/A"}</p>
+              <p><strong>Service Needed:</strong> ${cleanService || "N/A"}</p>
+              <p><strong>Estimated Budget:</strong> ${cleanBudget || "N/A"}</p>
+              <p><strong>Message:</strong></p>
+              <blockquote style="background:#f4f4f4;padding:12px;border-left:4px solid #6B21A8">${cleanMessage}</blockquote>
+              <p><small>Received on ${new Date().toLocaleString()}</small></p>
+            `
+          }).catch(err => console.error("Lead mail error:", err.message));
+        }
+      } catch (e) {
+        console.error("Nodemailer error:", e.message);
+      }
 
       res.status(201).json({ message: 'Thank you! We will be in touch shortly.', id: result.lastInsertRowid });
     } catch (err) {
