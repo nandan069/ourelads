@@ -553,7 +553,7 @@ function seedDatabase(db) {
     ['footer_tagline', 'Ideas / Content / Impact', 'general'],
     ['seo_title', 'Ourel Ads — Advertising & Creative Production Agency', 'seo'],
     ['seo_description', 'Ourel Ads is an advertising and creative production agency helping brands turn ideas into content that connects, engages and drives action.', 'seo'],
-    ['google_analytics_id', '', 'seo'],
+    [google_analytics_id, G-D2VRBPMM23, seo],
     ['google_tag_manager_id', '', 'seo'],
     ['map_delhi', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.83923192776!2d77.06889754725782!3d28.52758200617607!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1695000000000!5m2!1sen!2sin', 'maps'],
     ['map_bhopal', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58827.63847454887!2d77.3630782!3d23.2110688!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x397c4296aa060e41%3A0xe5d39bfed03d0b70!2sMP%20Nagar%2C%20Bhopal%2C%20Madhya%20Pradesh!5e0!3m2!1sen!2sin!4v1695000000001!5m2!1sen!2sin', 'maps'],
