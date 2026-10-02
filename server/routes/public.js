@@ -229,19 +229,21 @@ function publicRoutes(db) {
         const nodemailer = require("nodemailer");
         const host = process.env.SMTP_HOST || "smtp.titan.email";
         const user = process.env.SMTP_USER || "info@ourelads.com";
-        const pass = process.env.SMTP_PASS || "Info@ourelads.com";
+        const pass = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || "Info@ourelads.com";
         const notifyEmail = process.env.NOTIFY_EMAIL || "info@ourelads.com";
+        const port = parseInt(process.env.SMTP_PORT, 10) || 465;
 
         if (host && user && pass) {
           const transporter = nodemailer.createTransport({
             host,
-            port: parseInt(process.env.SMTP_PORT, 10) || 465,
-            secure: true,
-            auth: { user, pass }
+            port,
+            secure: port === 465,
+            auth: { user, pass },
+            tls: { rejectUnauthorized: false }
           });
           transporter.sendMail({
             from: `"Ourel Ads Website" <${user}>`,
-            to: [user, notifyEmail].join(","),
+            to: notifyEmail,
             subject: `🔥 New Lead Inquiry from ${cleanName}`,
             html: `
               <h2>New Project Lead Received on Ourel Ads</h2>
@@ -255,7 +257,8 @@ function publicRoutes(db) {
               <blockquote style="background:#f4f4f4;padding:12px;border-left:4px solid #6B21A8">${cleanMessage}</blockquote>
               <p><small>Received on ${new Date().toLocaleString()}</small></p>
             `
-          }).catch(err => console.error("Lead mail error:", err.message));
+          }).then(info => console.log("Lead mail sent successfully:", info.messageId))
+            .catch(err => console.error("Lead mail error:", err.message));
         }
       } catch (e) {
         console.error("Nodemailer error:", e.message);
