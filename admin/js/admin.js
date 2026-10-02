@@ -1256,9 +1256,7 @@ checkAuth();
 async function renderAnalyticsPage(container) {
   container.innerHTML = '<div class="loading-state">Loading real-time website analytics...</div>';
   try {
-    const res = await apiFetch('/admin/analytics/overview');
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to load analytics');
+    const data = await apiCall('/admin/analytics/overview');
 
     const summary = data.summary || { total_views: 0, today_views: 0, unique_visitors: 0, total_leads: 0 };
     const dailyStats = data.dailyStats || [];
