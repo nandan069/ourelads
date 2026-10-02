@@ -69,8 +69,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// ─── STATIC FILES ───
-app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '1d' }));
+// ─── CLEAN URL REDIRECTS & STATIC FILES ───
+app.get('/index.html', (req, res) => {
+  res.redirect(301, '/');
+});
+
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.endsWith('.html') && !req.path.startsWith('/api') && !req.path.startsWith('/admin') && req.path !== '/404.html') {
+    const cleanPath = req.path.slice(0, -5);
+    return res.redirect(301, cleanPath === '/index' ? '/' : cleanPath);
+  }
+  next();
+});
+
+app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '1d', extensions: ['html'] }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads'), { maxAge: '7d' }));
 
 // ─── HEALTH CHECK ───
@@ -94,8 +106,8 @@ app.get(/^\/admin($|\/.*)/, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
 });
 
-// ─── DYNAMIC INSIGHT PAGES (preserve existing URLs) ───
-app.get('/insight-:slug.html', (req, res) => {
+// ─── DYNAMIC INSIGHT PAGES (Clean URLs & legacy support) ───
+app.get(['/insight-:slug', '/insight-:slug.html'], (req, res) => {
   const filePath = path.join(__dirname, '..', 'public', `insight-${req.params.slug}.html`);
   const fs = require('fs');
   if (fs.existsSync(filePath)) {

@@ -17,19 +17,23 @@
 
 /* Shared header, footer, WhatsApp button */
 (function () {
-  const page = document.body.getAttribute('data-page') || 'home';
+  let page = document.body.getAttribute('data-page');
+  if (!page) {
+    const pathName = window.location.pathname.replace(/^\//, '').replace(/\.html$/, '');
+    page = (pathName === '' || pathName === 'index') ? 'home' : pathName;
+  }
   const headerEl = document.getElementById('site-header');
   const footerEl = document.getElementById('site-footer');
 
   const links = [
-    { id: 'home', href: 'index.html', label: 'Home' },
-    { id: 'about', href: 'about.html', label: 'About' },
-    { id: 'work', href: 'work.html', label: 'Work' },
-    { id: 'services', href: 'services.html', label: 'Services' },
-    { id: 'insights', href: 'insights.html', label: 'Insights' },
-    { id: 'blog', href: 'blog.html', label: 'Blog' },
-    { id: 'testimonials', href: 'testimonials.html', label: 'Testimonials' },
-    { id: 'contact', href: 'contact.html', label: 'Contact' }
+    { id: 'home', href: '/', label: 'Home' },
+    { id: 'about', href: '/about', label: 'About' },
+    { id: 'work', href: '/work', label: 'Work' },
+    { id: 'services', href: '/services', label: 'Services' },
+    { id: 'insights', href: '/insights', label: 'Insights' },
+    { id: 'blog', href: '/blog', label: 'Blog' },
+    { id: 'testimonials', href: '/testimonials', label: 'Testimonials' },
+    { id: 'contact', href: '/contact', label: 'Contact' }
   ];
 
   const navItems = links.map((item) => {
@@ -44,12 +48,12 @@
       <div class="scroll-progress-bar" id="scroll-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
       <header class="header" id="header">
         <nav class="nav container">
-          <a href="index.html" class="nav-logo" id="nav-logo">
+          <a href="/" class="nav-logo" id="nav-logo">
             <img src="logo.jpeg" alt="Ourel Ads Logo" class="brand-logo-img" />
             <span class="logo-text">OUREL<span class="logo-accent"> ADS</span></span>
           </a>
           <ul class="nav-menu" id="nav-menu">${navItems}</ul>
-          <a href="contact.html" class="btn btn-primary nav-cta" id="nav-cta">Start a Project →</a>
+          <a href="/contact" class="btn btn-primary nav-cta" id="nav-cta">Start a Project →</a>
           <button class="hamburger" id="hamburger" aria-expanded="false" aria-label="Toggle menu" aria-controls="nav-menu">
             <span></span><span></span><span></span>
           </button>
@@ -83,22 +87,22 @@
           <div class="footer-links">
             <div class="footer-col">
               <div class="footer-col-title">Company</div>
-              <a href="about.html">About</a>
-              <a href="work.html">Work</a>
-              <a href="services.html">Services</a>
-              <a href="insights.html">Insights</a>
-              <a href="blog.html">Blog</a>
-              <a href="testimonials.html">Testimonials</a>
-              <a href="contact.html">Contact</a>
+              <a href="/about">About</a>
+              <a href="/work">Work</a>
+              <a href="/services">Services</a>
+              <a href="/insights">Insights</a>
+              <a href="/blog">Blog</a>
+              <a href="/testimonials">Testimonials</a>
+              <a href="/contact">Contact</a>
             </div>
             <div class="footer-col">
               <div class="footer-col-title">Services</div>
-              <a href="services.html">Performance Videos</a>
-              <a href="services.html">Brand Films &amp; TVCs</a>
-              <a href="services.html">Micro-Dramas</a>
-              <a href="services.html">Content Marketing</a>
-              <a href="services.html">Digital Marketing</a>
-              <a href="services.html">Motion Graphics</a>
+              <a href="/services">Performance Videos</a>
+              <a href="/services">Brand Films &amp; TVCs</a>
+              <a href="/services">Micro-Dramas</a>
+              <a href="/services">Content Marketing</a>
+              <a href="/services">Digital Marketing</a>
+              <a href="/services">Motion Graphics</a>
             </div>
             <div class="footer-col">
               <div class="footer-col-title">Connect</div>

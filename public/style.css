@@ -661,7 +661,7 @@ ul {
 }
 .marquee-track-wrapper {
   overflow: hidden;
-  padding-bottom: 2rem;
+  padding: 1.75rem 0;
   -webkit-mask: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
   mask: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }

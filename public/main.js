@@ -151,15 +151,15 @@ document.addEventListener('DOMContentLoaded', async () => {
      PORTFOLIO DATA + RENDERING
   ══════════════════════════════════════════ */
   const fallbackPortfolio = [
-    { brand: 'Infinix',      title: 'Product Launch Campaign', category: 'brand',       type: 'Brand Film', logo: 'assets/infinix.jpeg', href: 'work.html' },
-    { brand: 'GoodScore',   title: 'Financial Wellbeing Ad',  category: 'performance', type: 'Performance', logo: 'assets/goodscore.jpeg', href: 'work.html' },
-    { brand: 'Seekho',      title: 'Learning Platform Reel',  category: 'performance', type: 'Performance', logo: 'assets/seekho.jpeg', href: 'work.html' },
-    { brand: 'Brands.live', title: 'Creator Economy Film',    category: 'brand',       type: 'Brand Film', logo: 'assets/brands-live.jpeg', href: 'work.html' },
-    { brand: 'GoCredit',    title: 'Credit Score Micro-Drama',category: 'micro-drama', type: 'Micro-Drama', logo: 'assets/gocredit.jpeg', href: 'work.html' },
-    { brand: 'Vyapar',      title: 'SME Storytelling Series', category: 'social',      type: 'Social', logo: 'assets/vyapar.jpeg', href: 'work.html' },
-    { brand: 'Bansal Group',title: 'Brand Identity Film',     category: 'brand',       type: 'Brand Film', logo: 'assets/bansal-group.jpeg', href: 'work.html' },
-    { brand: 'FatakPay',    title: 'BNPL Awareness Campaign', category: 'performance', type: 'Performance', logo: 'assets/fatakpay.jpeg', href: 'work.html' },
-    { brand: 'Bachatt',     title: 'Social Media Content',    category: 'social',      type: 'Social', logo: 'assets/bachatt.jpeg', href: 'work.html' },
+    { brand: 'Infinix',      title: 'Product Launch Campaign', category: 'brand',       type: 'Brand Film', logo: 'assets/infinix.jpeg', href: '/work' },
+    { brand: 'GoodScore',   title: 'Financial Wellbeing Ad',  category: 'performance', type: 'Performance', logo: 'assets/goodscore.jpeg', href: '/work' },
+    { brand: 'Seekho',      title: 'Learning Platform Reel',  category: 'performance', type: 'Performance', logo: 'assets/seekho.jpeg', href: '/work' },
+    { brand: 'Brands.live', title: 'Creator Economy Film',    category: 'brand',       type: 'Brand Film', logo: 'assets/brands-live.jpeg', href: '/work' },
+    { brand: 'GoCredit',    title: 'Credit Score Micro-Drama',category: 'micro-drama', type: 'Micro-Drama', logo: 'assets/gocredit.jpeg', href: '/work' },
+    { brand: 'Vyapar',      title: 'SME Storytelling Series', category: 'social',      type: 'Social', logo: 'assets/vyapar.jpeg', href: '/work' },
+    { brand: 'Bansal Group',title: 'Brand Identity Film',     category: 'brand',       type: 'Brand Film', logo: 'assets/bansal-group.jpeg', href: '/work' },
+    { brand: 'FatakPay',    title: 'BNPL Awareness Campaign', category: 'performance', type: 'Performance', logo: 'assets/fatakpay.jpeg', href: '/work' },
+    { brand: 'Bachatt',     title: 'Social Media Content',    category: 'social',      type: 'Social', logo: 'assets/bachatt.jpeg', href: '/work' },
   ];
 
   const portfolioData = await fetchApiData('/projects', fallbackPortfolio);
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     portfolioGrid.innerHTML = filtered.map((p, i) => {
       const clientBg = clients.find(c => (c.name || c.brand) === p.brand)?.bg_color;
       return `
-      <a href="${p.href || p.project_url || 'work.html'}" class="portfolio-card" data-category="${p.category || p.category_slug}" data-animate="fade-up" data-delay="${(i % 3) * 80}">
+      <a href="${p.href || p.project_url || '/work'}" class="portfolio-card" data-category="${p.category || p.category_slug}" data-animate="fade-up" data-delay="${(i % 3) * 80}">
         <div class="portfolio-card-thumb" style="background:${clientBg || bgColors[i % bgColors.length]}">
           <span class="portfolio-thumb-label">${p.type || p.category || 'Case Study'}</span>
           <img class="portfolio-logo" src="${p.logo || p.thumbnail}" alt="${p.brand || p.title} logo" />
@@ -418,43 +418,43 @@ document.addEventListener('DOMContentLoaded', async () => {
       title: 'Why Storytelling Is the Most Underrated Marketing Tool',
       desc: 'Brands that invest in narrative consistently outperform those focused purely on product messaging. Here\'s why.', excerpt: 'Brands that invest in narrative consistently outperform those focused purely on product messaging.',
       color: '#2d0a50',
-      href: 'insight-storytelling.html'
+      href: '/insight-storytelling'
     },
     {
       tag: 'Performance Marketing', category: 'Performance Marketing',
       title: 'The First 3 Seconds: How Attention Defines Ad Performance',
       desc: 'In a world of infinite scroll, your creative has 3 seconds to earn a view. We break down what makes the difference.', excerpt: 'In a world of infinite scroll, your creative has 3 seconds to earn a view.',
       color: '#0a1628',
-      href: 'insight-attention.html'
+      href: '/insight-attention'
     },
     {
       tag: 'Creative Thinking', category: 'Creative Thinking',
       title: 'From Brief to Screen: How We Build a Brand Film',
       desc: 'A behind-the-scenes look at Ourel Ads\' complete creative production process — from the first call to final delivery.', excerpt: 'A behind-the-scenes look at Ourel Ads\' complete creative production process.',
       color: '#1a0a2e',
-      href: 'insight-process.html'
+      href: '/insight-process'
     },
     {
       tag: 'Advertising', category: 'Advertising',
       title: 'Micro-Dramas: The New Language of Brand Communication',
       desc: 'Short-form narrative content is redefining how brands connect with audiences. Why Ourel Ads is leading this shift.', excerpt: 'Short-form narrative content is redefining how brands connect with audiences.',
       color: '#0d1f0d',
-      href: 'insight-micro-dramas.html'
+      href: '/insight-micro-dramas'
     },
     {
       tag: 'AI & Advertising', category: 'AI & Advertising',
       title: 'Human Creativity in the Age of AI-Generated Content',
       desc: 'AI can generate. But it can\'t understand. Here\'s why human-led creative will always win in brand communication.', excerpt: 'AI can generate. But it can\'t understand.',
       color: '#1f0d0d',
-      href: 'insight-ai.html'
+      href: '/insight-ai'
     },
     {
       tag: 'Consumer Behaviour', category: 'Consumer Behaviour',
       title: 'Why Indian Consumers Respond to Emotional Advertising',
       desc: 'Understanding the emotional triggers that drive brand loyalty in Indian markets — and how to use them responsibly.', excerpt: 'Understanding the emotional triggers that drive brand loyalty in Indian markets.',
       color: '#1a1f0d',
-      href: 'insight-emotion.html'
-    },
+      href: '/insight-emotion'
+    }
   ];
 
   const insightsData = await fetchApiData('/insights', fallbackInsights);
@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const insightsGrid = document.getElementById('insights-grid');
   if (insightsGrid) {
     insightsGrid.innerHTML = insightsData.map(ins => `
-      <a href="${ins.href || `/insight-${ins.slug}.html` || '#'}" class="insight-card" data-animate="fade-up">
+      <a href="${ins.href || (ins.slug ? `/insight-${ins.slug}` : '#')}" class="insight-card" data-animate="fade-up">
         <div class="insight-img" style="background:${ins.color || '#2d0a50'}">
           <div class="insight-img-placeholder">${(ins.category || ins.tag || 'IN').slice(0,2).toUpperCase()}</div>
         </div>

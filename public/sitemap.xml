@@ -7,37 +7,37 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://ourelads.com/about.html</loc>
+    <loc>https://ourelads.com/about</loc>
     <lastmod>2026-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ourelads.com/services.html</loc>
+    <loc>https://ourelads.com/services</loc>
     <lastmod>2026-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ourelads.com/work.html</loc>
+    <loc>https://ourelads.com/work</loc>
     <lastmod>2026-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ourelads.com/insights.html</loc>
+    <loc>https://ourelads.com/insights</loc>
     <lastmod>2026-10-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ourelads.com/contact.html</loc>
+    <loc>https://ourelads.com/contact</loc>
     <lastmod>2026-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://ourelads.com/blog.html</loc>
+    <loc>https://ourelads.com/blog</loc>
     <lastmod>2026-10-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
