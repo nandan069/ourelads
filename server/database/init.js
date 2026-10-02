@@ -527,6 +527,16 @@ function initDatabase(dbPath) {
 }
 
 function seedDatabase(db) {
+  // ─── SEED INITIAL ANALYTICS IF EMPTY ───
+  try {
+    const analyticsCount = db.prepare("SELECT COUNT(*) as c FROM page_analytics").get().c;
+    if (analyticsCount === 0) {
+      const seedPages = ["/index.html", "/about.html", "/services.html", "/work.html", "/insights.html", "/blog.html", "/contact.html"];
+      const stmt = db.prepare("INSERT INTO page_analytics (page_path, ip_address) VALUES (?, ?)");
+      seedPages.forEach(p => stmt.run(p, "127.0.0.1"));
+    }
+  } catch(e) {}
+
   // Check if already seeded
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (userCount.count > 0) return;
