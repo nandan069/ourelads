@@ -9,27 +9,11 @@ let currentUser = null;
 let currentPage = 'dashboard';
 let activeMediaPickerInput = null;
 let chartInstances = [];
-let csrfToken = null;
-
-// ─── CSRF TOKEN FETCH ───
-async function fetchCsrfToken() {
-  try {
-    const res = await fetch('/api/csrf-token', { credentials: 'same-origin' });
-    const data = await res.json();
-    csrfToken = data.csrfToken;
-  } catch (e) {
-    console.warn('Failed to fetch CSRF token:', e);
-  }
-}
 
 // ─── API HELPER ─── 
 async function api(endpoint, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  // Add CSRF token for admin endpoints
-  if (endpoint.startsWith('/admin') && csrfToken) {
-    headers['X-CSRF-Token'] = csrfToken;
-  }
   const cfg = { headers, ...opts, credentials: 'same-origin' };
   if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
     cfg.body = JSON.stringify(opts.body);
@@ -215,7 +199,6 @@ function showLogin() {
 async function showAdmin() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('adminLayout').style.display = 'flex';
-  await fetchCsrfToken();
   buildSidebar();
   navigate('dashboard');
 }

@@ -100,11 +100,13 @@ const csrfProtection = csrf({
   },
 });
 
+// Apply CSRF only to admin panel form submissions (not API)
+// API endpoints use JWT auth which is sufficient
 app.use((req, res, next) => {
-  // Exempt login endpoint from CSRF (needed before user has token)
-  if (req.path === '/api/auth/login') return next();
-  // Include csrf-token endpoint in CSRF protection so token gets generated
-  if (req.path === '/api/csrf-token' || req.path.startsWith('/api/admin') || req.path.startsWith('/api/auth')) {
+  // Exempt API routes from CSRF
+  if (req.path.startsWith('/api/')) return next();
+  // Apply CSRF to admin panel HTML routes
+  if (req.path.startsWith('/admin')) {
     return csrfProtection(req, res, next);
   }
   next();
@@ -221,11 +223,6 @@ app.get('/api/health/live', (req, res) => {
 app.use('/api/auth', authLimiter, authRoutes(db));
 app.use('/api', apiLimiter, publicRoutes(db));
 app.use('/api/admin', adminLimiter, adminRoutes(db));
-
-// ─── CSRF TOKEN ENDPOINT ───
-app.get('/api/csrf-token', (req, res) => {
-  res.json({ csrfToken: req.csrfToken?.() });
-});
 
 // ─── ADMIN PANEL ───
 app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
