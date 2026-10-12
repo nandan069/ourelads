@@ -8,6 +8,7 @@ let token = localStorage.getItem('admin_token');
 let currentUser = null;
 let currentPage = 'dashboard';
 let activeMediaPickerInput = null;
+let chartInstances = [];
 
 // ─── API HELPER ─── 
 async function api(endpoint, opts = {}) {
@@ -20,10 +21,15 @@ async function api(endpoint, opts = {}) {
   if (opts.body instanceof FormData) {
     delete headers['Content-Type'];
   }
-  const res = await fetch(`/api${endpoint}`, cfg);
+  let res;
+  try {
+    res = await fetch(`/api${endpoint}`, cfg);
+  } catch (networkError) {
+    throw new Error('Network error: Unable to connect to server');
+  }
   if (res.status === 401) { logout(); throw new Error('Session expired'); }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) throw new Error(data.error || `Request failed with status ${res.status}`);
   return data;
 }
 
@@ -136,6 +142,17 @@ function timeAgo(dateStr) {
   return d.toLocaleDateString();
 }
 
+// ─── HTML ESCAPE (XSS Prevention) ───
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, '&#039;');
+}
+
 // ─── AUTH ─── 
 async function login(e) {
   e.preventDefault();
@@ -205,7 +222,6 @@ const NAV_ITEMS = [
     { id: 'reels', icon: '🎬', label: 'Video Reels' },
     { id: 'services', icon: '💼', label: 'Agency Services' },
     { id: 'cases', icon: '📋', label: 'Case Studies' },
-    { id: 'insights', icon: '💡', label: 'Insights & Articles' },
     { id: 'blog', icon: '✍️', label: 'Blog Posts' },
     { id: 'testimonials', icon: '⭐', label: 'Client Reviews' },
     { id: 'team', icon: '👥', label: 'Team Profiles' },
@@ -224,6 +240,11 @@ const NAV_ITEMS = [
 
 function buildSidebar() {
   const nav = document.getElementById('sidebarNav');
+  // Destroy charts when navigating away from analytics
+  if (currentPage === 'analytics') {
+    chartInstances.forEach(chart => chart.destroy());
+    chartInstances = [];
+  }
   nav.innerHTML = NAV_ITEMS.map(sec => `
     <div class="nav-section">
       <div class="nav-section-label">${sec.section}</div>
@@ -265,7 +286,6 @@ async function navigate(page) {
     reels: 'Video Reels',
     services: 'Services',
     cases: 'Case Studies',
-    insights: 'Insights',
     blog: 'Blog',
     testimonials: 'Client Reviews',
     team: 'Team Members',
@@ -291,7 +311,6 @@ async function navigate(page) {
       case 'services': await renderCrudPage(content, 'services', 'Agency Services', serviceFields()); break;
       case 'cases': await renderCrudPage(content, 'cases', 'Case Studies', caseFields()); break;
       case 'team': await renderCrudPage(content, 'team', 'Team Profiles', teamFields()); break;
-      case 'insights': await renderCrudPage(content, 'insights', 'Insights & Articles', insightFields()); break;
       case 'blog': await renderCrudPage(content, 'blog', 'Blog Posts', blogFields()); break;
       case 'testimonials': await renderCrudPage(content, 'testimonials', 'Client Reviews', testimonialFields()); break;
       case 'faqs': await renderCrudPage(content, 'faqs', 'FAQs', faqFields()); break;
@@ -464,16 +483,6 @@ function teamFields() { return [
   { name: 'is_active', label: 'Show on Site', type: 'checkbox', tableShow: true },
 ]; }
 
-function insightFields() { return [
-  { name: 'title', label: 'Article Title', type: 'text', required: true, tableShow: true },
-  { name: 'category', label: 'Category / Tag', type: 'text', tableShow: true, help: 'e.g. Brand Strategy, Performance Marketing' },
-  { name: 'excerpt', label: 'Short Excerpt', type: 'textarea', help: 'Summary shown on card previews' },
-  { name: 'content', label: 'Full Article Content (HTML)', type: 'textarea' },
-  { name: 'color', label: 'Card Color Accent', type: 'text', help: 'Hex color code e.g. #2d0a50' },
-  { name: 'featured_image', label: 'Cover Image', type: 'image' },
-  { name: 'status', label: 'Status', type: 'select', options: ['published', 'draft'], tableShow: true },
-]; }
-
 function blogFields() { return [
   { name: 'title', label: 'Post Title', type: 'text', required: true, tableShow: true },
   { name: 'excerpt', label: 'Short Summary', type: 'textarea' },
@@ -644,8 +653,7 @@ window.reelsFields = reelFields;
 window.servicesFields = serviceFields;
 window.casesFields = caseFields;
 window.teamFields = teamFields;
-window.insightsFields = insightFields;
-window.blogFields = blogFields;
+  window.blogFields = blogFields;
 window['blog-categoriesFields'] = blogCategoriesFields;
 window.blogcategoriesFields = blogCategoriesFields;
 window.testimonialsFields = testimonialFields;
@@ -706,7 +714,6 @@ async function renderHomepage(el) {
     reels_section: { title: '🎬 Video Reels Ribbon', desc: 'Autoscrolling video showcase ribbon.' },
     cases_section: { title: '📋 Case Studies Section', desc: 'Case studies section titles.' },
     team_section: { title: '👥 Our Team Section', desc: 'Team section headline and subtext.' },
-    insights_section: { title: '💡 Insights & Articles Section', desc: 'Articles section header.' },
     testimonials_section: { title: '💬 Client Reviews Section', desc: 'Testimonials carousel section title.' },
     contact_section: { title: '📬 Contact Us Section', desc: 'Contact section headline and call to action.' },
   };
@@ -724,6 +731,7 @@ async function renderHomepage(el) {
       const config = SECTION_CONFIG[sec];
       const secData = data[sec] || {};
       const previewText = secData.headline || secData.title || secData.tag || 'Configured section';
+      const safePreview = escapeHtml(previewText).replace(/<br\s*\/?>/gi, ' ');
 
       return `
         <div class="page-section-card">
@@ -739,7 +747,7 @@ async function renderHomepage(el) {
           </div>
           <div class="page-section-body" style="background:var(--bg-input);font-size:0.9rem">
             <strong>Current Headline / Preview:</strong>
-            <p style="color:var(--text-primary);margin-top:4px">${String(previewText).replace(/<br\s*\/?>/gi, ' ')}</p>
+            <p style="color:var(--text-primary);margin-top:4px">${safePreview}</p>
           </div>
         </div>
       `;
@@ -1034,8 +1042,7 @@ async function uploadMedia(input) {
 }
 
 async function viewMediaItem(id) {
-  const items = (await api('/admin/media?limit=999')).data;
-  const m = items.find(x => x.id === id);
+  const m = await api(`/admin/media/${id}`);
   if (!m) return;
   const isImg = /jpeg|jpg|png|gif|webp|svg/.test(m.file_type || m.mime_type || '');
   openEditorModal('Media Details', `
@@ -1068,7 +1075,7 @@ async function deleteMedia(id) {
 // SEO & ANALYTICS
 // ═══════════════════════════════════════════
 async function renderSEO(el) {
-  const settings = await api('/settings');
+  const settings = await api('/admin/settings');
   el.innerHTML = `
     <div class="page-header">
       <div>
@@ -1103,8 +1110,9 @@ async function renderSEO(el) {
 // USERS & BACKUP
 // ═══════════════════════════════════════════
 async function renderUsers(el) {
-  const users = await api('/auth/users');
-  el.innerHTML = `
+  try {
+    const users = await api('/auth/users');
+    el.innerHTML = `
     <div class="page-header">
       <h1 class="page-title">Admin Users</h1>
       <button class="btn btn-primary" onclick="createUser()">+ Add Admin User</button>
@@ -1122,6 +1130,10 @@ async function renderUsers(el) {
       </table></div>
     </div></div>
   `;
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error loading users</h3><p>${e.message}</p></div>`;
+    toast(e.message, 'error');
+  }
 }
 
 function createUser() {
@@ -1170,12 +1182,15 @@ async function renderActivity(el, pg = 1) {
     <div class="card"><div class="card-body" style="padding:0">
       <div class="table-wrapper"><table class="data-table">
         <thead><tr><th>User</th><th>Action</th><th>Target</th><th>Time</th></tr></thead>
-        <tbody>${res.data.length ? res.data.map(a => `<tr>
-          <td>${a.full_name || a.username || 'System'}</td>
-          <td><span class="badge badge-${a.action === 'login' ? 'active' : a.action === 'deleted' ? 'closed' : 'new'}">${a.action}</span></td>
-          <td>${a.entity_type || '-'}</td>
-          <td>${timeAgo(a.created_at)}</td>
-        </tr>`).join('') : '<tr><td colspan="4"><div class="empty-state"><p>No activity recorded yet</p></div></td></tr>'}</tbody>
+        <tbody>${res.data.length ? res.data.map(a => {
+          const actionClass = a.action === 'login' ? 'badge-active' : a.action === 'deleted' ? 'badge-closed' : 'badge-new';
+          return `<tr>
+            <td>${a.full_name || a.username || 'System'}</td>
+            <td><span class="badge ${actionClass}">${a.action}</span></td>
+            <td>${a.entity_type || '-'}</td>
+            <td>${timeAgo(a.created_at)}</td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="4"><div class="empty-state"><p>No activity recorded yet</p></div></td></tr>'}</tbody>
       </table></div>
     </div></div>
   `;
@@ -1217,9 +1232,15 @@ document.getElementById('loginForm').addEventListener('submit', login);
 document.getElementById('logoutBtn').addEventListener('click', logout);
 document.getElementById('sidebarToggle').addEventListener('click', () => {
   document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('visible');
 });
 document.getElementById('sidebarClose').addEventListener('click', () => {
   document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('visible');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('visible');
 });
 
 // Make functions global for inline onclick
@@ -1249,6 +1270,12 @@ window.uploadDirectFromPicker = uploadDirectFromPicker;
 // Check authentication status on startup
 checkAuth();
 
+// ─── CLEANUP ON PAGE UNLOAD ───
+window.addEventListener('beforeunload', () => {
+  chartInstances.forEach(chart => chart.destroy());
+  chartInstances = [];
+});
+
 
 // ═══════════════════════════════════════════
 // ANALYTICS & TRAFFIC DASHBOARD WITH GRAPHS
@@ -1268,22 +1295,22 @@ async function renderAnalyticsPage(container) {
 
     container.innerHTML = `
       <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px">
-        <div class="stat-card stat-primary" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="stat-card stat-primary" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">👁️ Total Page Views</div>
           <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--text-primary);margin:6px 0">${summary.total_views}</div>
           <small style="color:var(--accent)">All time page impressions</small>
         </div>
-        <div class="stat-card stat-success" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="stat-card stat-success" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">⚡ Today's Views</div>
           <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--success);margin:6px 0">${summary.today_views}</div>
           <small style="color:var(--success)">Live visits today</small>
         </div>
-        <div class="stat-card stat-info" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="stat-card stat-info" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">👤 Unique Visitors</div>
           <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--info);margin:6px 0">${summary.unique_visitors}</div>
           <small style="color:var(--info)">Distinct IP devices</small>
         </div>
-        <div class="stat-card stat-warning" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="stat-card stat-warning" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="stat-label" style="color:var(--text-muted);font-size:13px;font-weight:600">📬 Total Inquiries</div>
           <div class="stat-value" style="font-size:28px;font-weight:800;color:var(--warning);margin:6px 0">${summary.total_leads}</div>
           <small style="color:var(--warning)">Leads from contact form</small>
@@ -1291,7 +1318,7 @@ async function renderAnalyticsPage(container) {
       </div>
 
       <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px">
-        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <h3 style="font-size:16px;font-weight:700">📈 Traffic & Visitor Trend (Last 14 Days)</h3>
             <a href="https://analytics.google.com" target="_blank" class="btn btn-ghost btn-xs">Open Google Analytics ↗</a>
@@ -1301,7 +1328,7 @@ async function renderAnalyticsPage(container) {
           </div>
         </div>
 
-        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="card-header" style="margin-bottom:16px">
             <h3 style="font-size:16px;font-weight:700">🔥 Most Visited Pages</h3>
           </div>
@@ -1312,7 +1339,7 @@ async function renderAnalyticsPage(container) {
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="card-header" style="margin-bottom:16px"><h3 style="font-size:16px;font-weight:700">📊 Page Views Breakdown</h3></div>
           <div class="table-wrapper">
             <table class="data-table">
@@ -1329,7 +1356,7 @@ async function renderAnalyticsPage(container) {
           </div>
         </div>
 
-        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border-color)">
+        <div class="card" style="background:var(--bg-card);padding:20px;border-radius:12px;border:1px solid var(--border)">
           <div class="card-header" style="margin-bottom:12px"><h3 style="font-size:16px;font-weight:700">🔗 Google Analytics Integration</h3></div>
           <p style="color:var(--text-muted);font-size:14px;line-height:1.6;margin-bottom:16px">
             Google Analytics (GA4) Tag <code>${data.ga_id}</code> is active across all website pages. You can view real-time live users, demography, and traffic acquisition channels on Google Analytics.
@@ -1342,60 +1369,69 @@ async function renderAnalyticsPage(container) {
     `;
 
     if (typeof Chart !== 'undefined') {
-      const ctx1 = document.getElementById('trafficTrendChart');
-      if (ctx1) {
-        new Chart(ctx1, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: 'Page Views',
-                data: viewsData,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                fill: true,
-                tension: 0.3
-              },
-              {
-                label: 'Unique Visitors',
-                data: visitorsData,
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                fill: true,
-                tension: 0.3
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-          }
-        });
-      }
+      // Destroy any existing charts to prevent memory leaks
+      chartInstances.forEach(chart => chart.destroy());
+      chartInstances = [];
 
-      const ctx2 = document.getElementById('topPagesChart');
-      if (ctx2) {
-        new Chart(ctx2, {
-          type: 'bar',
-          data: {
-            labels: topPages.map(p => p.page_path.replace('.html', '').replace('/', '') || 'home'),
-            datasets: [{
-              label: 'Views',
-              data: topPages.map(p => p.views),
-              backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#64748b']
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-          }
-        });
-      }
+      // Small delay to ensure canvas has proper dimensions
+      setTimeout(() => {
+        const ctx1 = document.getElementById('trafficTrendChart');
+        if (ctx1) {
+          const chart1 = new Chart(ctx1, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Page Views',
+                  data: viewsData,
+                  borderColor: '#3b82f6',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  fill: true,
+                  tension: 0.3
+                },
+                {
+                  label: 'Unique Visitors',
+                  data: visitorsData,
+                  borderColor: '#10b981',
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  fill: true,
+                  tension: 0.3
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { position: 'top' } },
+              scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+          });
+          chartInstances.push(chart1);
+        }
+
+        const ctx2 = document.getElementById('topPagesChart');
+        if (ctx2) {
+          const chart2 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+              labels: topPages.map(p => p.page_path.replace('.html', '').replace('/', '') || 'home'),
+              datasets: [{
+                label: 'Views',
+                data: topPages.map(p => p.views),
+                backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#64748b']
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+          });
+          chartInstances.push(chart2);
+        }
+      }, 0);
     }
   } catch (err) {
     container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>${err.message}</h3></div>`;

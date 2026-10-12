@@ -6,12 +6,17 @@ const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const { logger } = require('../utils/logger');
 
 function initDatabase(dbPath) {
-  const dir = path.dirname(dbPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-  const db = new Database(dbPath);
+  let db;
+  if (dbPath instanceof Database) {
+    db = dbPath;
+  } else {
+    const dir = path.dirname(dbPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    db = new Database(dbPath);
+  }
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
 
@@ -258,37 +263,6 @@ function initDatabase(dbPath) {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- Insight Categories
-    CREATE TABLE IF NOT EXISTS insight_categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      slug TEXT NOT NULL UNIQUE,
-      sort_order INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Insights
-    CREATE TABLE IF NOT EXISTS insights (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      slug TEXT UNIQUE,
-      excerpt TEXT,
-      content TEXT,
-      featured_image TEXT,
-      author TEXT,
-      category TEXT,
-      category_id INTEGER,
-      tags TEXT,
-      color TEXT,
-      read_time INTEGER,
-      is_featured INTEGER DEFAULT 0,
-      status TEXT DEFAULT 'published',
-      published_at DATETIME,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (category_id) REFERENCES insight_categories(id)
-    );
-
     -- Blog Categories
     CREATE TABLE IF NOT EXISTS blog_categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -515,7 +489,6 @@ function initDatabase(dbPath) {
     CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_slug);
     CREATE INDEX IF NOT EXISTS idx_services_status ON services(status);
     CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
-    CREATE INDEX IF NOT EXISTS idx_insights_status ON insights(status);
     CREATE INDEX IF NOT EXISTS idx_contact_submissions_status ON contact_submissions(status);
     CREATE INDEX IF NOT EXISTS idx_activity_logs_created ON activity_logs(created_at);
     CREATE INDEX IF NOT EXISTS idx_revisions_entity ON revisions(entity_type, entity_id);
@@ -531,7 +504,7 @@ function seedDatabase(db) {
   try {
     const analyticsCount = db.prepare("SELECT COUNT(*) as c FROM page_analytics").get().c;
     if (analyticsCount === 0) {
-      const seedPages = ["/index.html", "/about.html", "/services.html", "/work.html", "/insights.html", "/blog.html", "/contact.html"];
+      const seedPages = ["/index.html", "/about.html", "/services.html", "/work.html", "/blog.html", "/contact.html"];
       const stmt = db.prepare("INSERT INTO page_analytics (page_path, ip_address) VALUES (?, ?)");
       seedPages.forEach(p => stmt.run(p, "127.0.0.1"));
     }
@@ -541,7 +514,7 @@ function seedDatabase(db) {
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (userCount.count > 0) return;
 
-  console.log('Seeding database with existing content...');
+  logger.info('Seeding database with existing content...');
 
   // ─── ROLES ───
   const insertRole = db.prepare('INSERT INTO roles (name, description) VALUES (?, ?)');
@@ -572,7 +545,7 @@ function seedDatabase(db) {
     ['footer_tagline', 'Ideas / Content / Impact', 'general'],
     ['seo_title', 'Ourel Ads — Advertising & Creative Production Agency', 'seo'],
     ['seo_description', 'Ourel Ads is an advertising and creative production agency helping brands turn ideas into content that connects, engages and drives action.', 'seo'],
-    [google_analytics_id, G-D2VRBPMM23, seo],
+    ['google_analytics_id', 'G-D2VRBPMM23', 'seo'],
     ['google_tag_manager_id', '', 'seo'],
     ['map_delhi', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.83923192776!2d77.06889754725782!3d28.52758200617607!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1695000000000!5m2!1sen!2sin', 'maps'],
     ['map_bhopal', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58827.63847454887!2d77.3630782!3d23.2110688!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x397c4296aa060e41%3A0xe5d39bfed03d0b70!2sMP%20Nagar%2C%20Bhopal%2C%20Madhya%20Pradesh!5e0!3m2!1sen!2sin!4v1695000000001!5m2!1sen!2sin', 'maps'],
@@ -710,18 +683,6 @@ function seedDatabase(db) {
   ];
   teamSeed.forEach(t => insertTeam.run(t[0], t[1], t[2], t[3], t[4]));
 
-  // ─── INSIGHTS ───
-  const insertInsight = db.prepare('INSERT INTO insights (title, slug, excerpt, category, color, status, published_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)');
-  const insightsSeed = [
-    ['Why Storytelling Is the Most Underrated Marketing Tool', 'storytelling-marketing', "Brands that invest in narrative consistently outperform those focused purely on product messaging. Here's why.", 'Brand Strategy', '#2d0a50'],
-    ['The First 3 Seconds: How Attention Defines Ad Performance', 'attention-ad-performance', 'In a world of infinite scroll, your creative has 3 seconds to earn a view. We break down what makes the difference.', 'Performance Marketing', '#0a1628'],
-    ['From Brief to Screen: How We Build a Brand Film', 'brief-to-screen', "A behind-the-scenes look at Ourel Ads' complete creative production process — from the first call to final delivery.", 'Creative Thinking', '#1a0a2e'],
-    ['Micro-Dramas: The New Language of Brand Communication', 'micro-dramas-brand', 'Short-form narrative content is redefining how brands connect with audiences. Why Ourel Ads is leading this shift.', 'Advertising', '#0d1f0d'],
-    ['Human Creativity in the Age of AI-Generated Content', 'human-creativity-ai', "AI can generate. But it can't understand. Here's why human-led creative will always win in brand communication.", 'AI & Advertising', '#1f0d0d'],
-    ['Why Indian Consumers Respond to Emotional Advertising', 'emotional-advertising-india', 'Understanding the emotional triggers that drive brand loyalty in Indian markets — and how to use them responsibly.', 'Consumer Behaviour', '#1a1f0d'],
-  ];
-  insightsSeed.forEach(i => insertInsight.run(i[0], i[1], i[2], i[3], i[4], 'published'));
-
   // ─── TESTIMONIALS ───
   const insertTestimonial = db.prepare('INSERT INTO testimonials (client_name, designation, company, testimonial, sort_order, status) VALUES (?, ?, ?, ?, ?, ?)');
   const testiSeed = [
@@ -834,13 +795,6 @@ function seedDatabase(db) {
   });
   insertHomepage.run('philosophy', philosophyContent);
 
-  const insightsContent = JSON.stringify({
-    tag: 'Thinking',
-    title: 'IDEAS / INSIGHTS',
-    subtitle: 'Perspectives on advertising, brand strategy and creative thinking.',
-  });
-  insertHomepage.run('insights_section', insightsContent);
-
   const testimonialsContent = JSON.stringify({
     tag: 'Client Love',
     title: 'WHAT OUR CLIENTS SAY',
@@ -871,12 +825,11 @@ function seedDatabase(db) {
   insertPage.run('About', 'about', 'published', 'about');
   insertPage.run('Work', 'work', 'published', 'work');
   insertPage.run('Services', 'services', 'published', 'services');
-  insertPage.run('Insights', 'insights', 'published', 'insights');
   insertPage.run('Blog', 'blog', 'published', 'blog');
   insertPage.run('Testimonials', 'testimonials', 'published', 'testimonials');
   insertPage.run('Contact', 'contact', 'published', 'contact');
 
-  console.log('Database seeded successfully!');
+  logger.info('Database seeded successfully!');
 }
 
 module.exports = { initDatabase, seedDatabase };

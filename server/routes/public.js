@@ -2,6 +2,7 @@
  * OUREL ADS — Public API Routes (Frontend consumption)
  */
 const express = require('express');
+const { logger } = require('../utils/logger');
 
 function publicRoutes(db) {
   const router = express.Router();
@@ -75,26 +76,6 @@ function publicRoutes(db) {
   // ─── TEAM ───
   router.get('/team', (req, res) => {
     res.json(db.prepare('SELECT * FROM team_members WHERE is_active = 1 ORDER BY sort_order').all());
-  });
-
-  // ─── INSIGHTS ───
-  router.get('/insights', (req, res) => {
-    const { category, limit } = req.query;
-    let sql = 'SELECT * FROM insights WHERE status = ?';
-    const params = ['published'];
-    if (category) { sql += ' AND category = ?'; params.push(category); }
-    sql += ' ORDER BY published_at DESC';
-    if (limit) {
-      const lim = parseInt(limit, 10);
-      if (!isNaN(lim) && lim > 0) { sql += ' LIMIT ?'; params.push(lim); }
-    }
-    res.json(db.prepare(sql).all(...params));
-  });
-
-  router.get('/insights/:slug', (req, res) => {
-    const row = db.prepare('SELECT * FROM insights WHERE slug = ? AND status = ?').get(req.params.slug, 'published');
-    if (!row) return res.status(404).json({ error: 'Not found' });
-    res.json(row);
   });
 
   // ─── BLOG ───
@@ -227,19 +208,19 @@ function publicRoutes(db) {
 
       try {
         const nodemailer = require("nodemailer");
-        const host = process.env.SMTP_HOST || "smtp.titan.email";
-        const user = process.env.SMTP_USER || "info@ourelads.com";
-        const pass = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || "Info@ourelads.com";
-        const notifyEmail = process.env.NOTIFY_EMAIL || "info@ourelads.com";
+        const host = process.env.SMTP_HOST;
+        const user = process.env.SMTP_USER;
+        const pass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS;
+        const notifyEmail = process.env.NOTIFY_EMAIL;
         const port = parseInt(process.env.SMTP_PORT, 10) || 465;
 
-        if (host && user && pass) {
+        if (host && user && pass && notifyEmail) {
           const transporter = nodemailer.createTransport({
             host,
             port,
             secure: port === 465,
             auth: { user, pass },
-            tls: { rejectUnauthorized: false }
+            tls: { rejectUnauthorized: process.env.NODE_ENV === 'production' }
           });
           transporter.sendMail({
             from: `"Ourel Ads Website" <${user}>`,
@@ -257,11 +238,13 @@ function publicRoutes(db) {
               <blockquote style="background:#f4f4f4;padding:12px;border-left:4px solid #6B21A8">${cleanMessage}</blockquote>
               <p><small>Received on ${new Date().toLocaleString()}</small></p>
             `
-          }).then(info => console.log("Lead mail sent successfully:", info.messageId))
-            .catch(err => console.error("Lead mail error:", err.message));
+          }).then(info => logger.info('Lead mail sent successfully', { messageId: info.messageId }))
+            .catch(err => logger.error('Lead mail error', { error: err.message }));
+        } else if (process.env.NODE_ENV === 'production') {
+          logger.warn('SMTP not configured - lead notification email not sent');
         }
       } catch (e) {
-        console.error("Nodemailer error:", e.message);
+        logger.error('Nodemailer error', { error: e.message });
       }
 
       res.status(201).json({ message: 'Thank you! We will be in touch shortly.', id: result.lastInsertRowid });

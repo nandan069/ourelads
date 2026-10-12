@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { authMiddleware, requireRole } = require('../middleware/auth');
-const { logActivity, createRevision } = require('../utils/logger');
+const { logger, logActivity, createRevision } = require('../utils/logger');
 
 function adminRoutes(db) {
   const router = express.Router();
@@ -167,7 +167,6 @@ function adminRoutes(db) {
   crudRoutes('services', 'services', 'service', { searchFields: ['title', 'short_description'], orderBy: 'sort_order' });
   crudRoutes('cases', 'case_studies', 'case_study', { searchFields: ['brand', 'campaign'], orderBy: 'sort_order' });
   crudRoutes('team', 'team_members', 'team_member', { searchFields: ['name', 'designation'], orderBy: 'sort_order' });
-  crudRoutes('insights', 'insights', 'insight', { searchFields: ['title', 'excerpt'], orderBy: 'published_at DESC' });
   crudRoutes('blog', 'blog_posts', 'blog_post', { searchFields: ['title', 'excerpt'], orderBy: 'published_at DESC' });
   crudRoutes('blog-categories', 'blog_categories', 'blog_category', { orderBy: 'sort_order' });
   crudRoutes('testimonials', 'testimonials', 'testimonial', { searchFields: ['client_name', 'company'], orderBy: 'sort_order' });
@@ -453,8 +452,7 @@ function adminRoutes(db) {
     const draftPages = db.prepare("SELECT COUNT(*) as c FROM pages WHERE status = 'draft'").get().c;
     const totalProjects = db.prepare("SELECT COUNT(*) as c FROM projects WHERE status = 'published'").get().c;
     const totalServices = db.prepare("SELECT COUNT(*) as c FROM services WHERE status = 'published'").get().c;
-    const totalBlog = db.prepare("SELECT COUNT(*) as c FROM blog_posts WHERE status = 'published'").get().c;
-    const totalInsights = db.prepare("SELECT COUNT(*) as c FROM insights WHERE status = 'published'").get().c;
+const totalBlog = db.prepare("SELECT COUNT(*) as c FROM blog_posts WHERE status = 'published'").get().c;
     const totalTestimonials = db.prepare("SELECT COUNT(*) as c FROM testimonials WHERE status = 'published'").get().c;
     const totalTeam = db.prepare('SELECT COUNT(*) as c FROM team_members WHERE is_active = 1').get().c;
     const totalClients = db.prepare('SELECT COUNT(*) as c FROM clients WHERE is_active = 1').get().c;
@@ -464,7 +462,7 @@ function adminRoutes(db) {
 
     res.json({
       leads: { total: totalLeads, new: newLeads, contacted: contactedLeads, qualified: qualifiedLeads, converted: convertedLeads },
-      content: { pages: publishedPages, drafts: draftPages, projects: totalProjects, services: totalServices, blog: totalBlog, insights: totalInsights, testimonials: totalTestimonials, team: totalTeam, clients: totalClients, media: totalMedia },
+      content: { pages: publishedPages, drafts: draftPages, projects: totalProjects, services: totalServices, blog: totalBlog, testimonials: totalTestimonials, team: totalTeam, clients: totalClients, media: totalMedia },
       recentActivity,
       recentLeads,
       analytics: { configured: !!process.env.GOOGLE_ANALYTICS_ID, id: process.env.GOOGLE_ANALYTICS_ID || null },

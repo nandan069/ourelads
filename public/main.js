@@ -340,6 +340,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ══════════════════════════════════════════
+     SERVICES PAGE — INTERACTIVE CATEGORY FILTER
+  ══════════════════════════════════════════ */
+  const serviceFilterBtns = document.querySelectorAll('.service-filter-btn');
+  const serviceCards = document.querySelectorAll('.service-card-pro');
+  if (serviceFilterBtns.length && serviceCards.length) {
+    serviceFilterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        serviceFilterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter || 'all';
+        serviceCards.forEach(card => {
+          const cardCat = card.dataset.category;
+          if (filter === 'all' || cardCat === filter) {
+            card.style.display = 'flex';
+            card.style.animation = 'cardFadeIn 0.35s ease forwards';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  }
+
+  /* ══════════════════════════════════════════
      CASE STUDIES DATA + RENDERING
   ══════════════════════════════════════════ */
   const fallbackCases = [
@@ -409,77 +433,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     teamGrid.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
   }
 
-  /* ══════════════════════════════════════════
-     INSIGHTS DATA + RENDERING
-  ══════════════════════════════════════════ */
-  const fallbackInsights = [
-    {
-      tag: 'Brand Strategy', category: 'Brand Strategy',
-      title: 'Why Storytelling Is the Most Underrated Marketing Tool',
-      desc: 'Brands that invest in narrative consistently outperform those focused purely on product messaging. Here\'s why.', excerpt: 'Brands that invest in narrative consistently outperform those focused purely on product messaging.',
-      color: '#2d0a50',
-      href: '/insight-storytelling'
-    },
-    {
-      tag: 'Performance Marketing', category: 'Performance Marketing',
-      title: 'The First 3 Seconds: How Attention Defines Ad Performance',
-      desc: 'In a world of infinite scroll, your creative has 3 seconds to earn a view. We break down what makes the difference.', excerpt: 'In a world of infinite scroll, your creative has 3 seconds to earn a view.',
-      color: '#0a1628',
-      href: '/insight-attention'
-    },
-    {
-      tag: 'Creative Thinking', category: 'Creative Thinking',
-      title: 'From Brief to Screen: How We Build a Brand Film',
-      desc: 'A behind-the-scenes look at Ourel Ads\' complete creative production process — from the first call to final delivery.', excerpt: 'A behind-the-scenes look at Ourel Ads\' complete creative production process.',
-      color: '#1a0a2e',
-      href: '/insight-process'
-    },
-    {
-      tag: 'Advertising', category: 'Advertising',
-      title: 'Micro-Dramas: The New Language of Brand Communication',
-      desc: 'Short-form narrative content is redefining how brands connect with audiences. Why Ourel Ads is leading this shift.', excerpt: 'Short-form narrative content is redefining how brands connect with audiences.',
-      color: '#0d1f0d',
-      href: '/insight-micro-dramas'
-    },
-    {
-      tag: 'AI & Advertising', category: 'AI & Advertising',
-      title: 'Human Creativity in the Age of AI-Generated Content',
-      desc: 'AI can generate. But it can\'t understand. Here\'s why human-led creative will always win in brand communication.', excerpt: 'AI can generate. But it can\'t understand.',
-      color: '#1f0d0d',
-      href: '/insight-ai'
-    },
-    {
-      tag: 'Consumer Behaviour', category: 'Consumer Behaviour',
-      title: 'Why Indian Consumers Respond to Emotional Advertising',
-      desc: 'Understanding the emotional triggers that drive brand loyalty in Indian markets — and how to use them responsibly.', excerpt: 'Understanding the emotional triggers that drive brand loyalty in Indian markets.',
-      color: '#1a1f0d',
-      href: '/insight-emotion'
-    }
-  ];
-
-  const insightsData = await fetchApiData('/insights', fallbackInsights);
-
-  const insightsGrid = document.getElementById('insights-grid');
-  if (insightsGrid) {
-    insightsGrid.innerHTML = insightsData.map(ins => `
-      <a href="${ins.href || (ins.slug ? `/insight-${ins.slug}` : '#')}" class="insight-card" data-animate="fade-up">
-        <div class="insight-img" style="background:${ins.color || '#2d0a50'}">
-          <div class="insight-img-placeholder">${(ins.category || ins.tag || 'IN').slice(0,2).toUpperCase()}</div>
-        </div>
-        <div class="insight-body">
-          <div class="insight-tag">${ins.category || ins.tag}</div>
-          <div class="insight-title">${ins.title}</div>
-          <div class="insight-desc">${ins.excerpt || ins.desc || ''}</div>
-          <span class="insight-read">Read More →</span>
-        </div>
-      </a>
-    `).join('');
-    insightsGrid.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
-  }
-
-  /* ══════════════════════════════════════════
-     TESTIMONIALS DATA + RENDERING
-  ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+      TESTIMONIALS DATA + RENDERING
+   ══════════════════════════════════════════ */
   const fallbackTestimonials = [
     {
       testimonial: 'Ourel Ads completely transformed how we communicate our product. The team understood our brand inside out and delivered creative that actually performed.',

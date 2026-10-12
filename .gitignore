@@ -65,7 +65,31 @@ node_modules/
 # dotenv environment variables file
 .env
 
-# Database WAL locks and backups
+# Database files
+server/database/*.db
 server/database/*.db-shm
 server/database/*.db-wal
 server/database/backups/
+
+# Uploads
+public/uploads/*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Docker
+.docker/
+
+# Logs directory
+logs/

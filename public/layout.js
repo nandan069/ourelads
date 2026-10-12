@@ -30,7 +30,6 @@
     { id: 'about', href: '/about', label: 'About' },
     { id: 'work', href: '/work', label: 'Work' },
     { id: 'services', href: '/services', label: 'Services' },
-    { id: 'insights', href: '/insights', label: 'Insights' },
     { id: 'blog', href: '/blog', label: 'Blog' },
     { id: 'testimonials', href: '/testimonials', label: 'Testimonials' },
     { id: 'contact', href: '/contact', label: 'Contact' }
@@ -90,7 +89,6 @@
               <a href="/about">About</a>
               <a href="/work">Work</a>
               <a href="/services">Services</a>
-              <a href="/insights">Insights</a>
               <a href="/blog">Blog</a>
               <a href="/testimonials">Testimonials</a>
               <a href="/contact">Contact</a>

@@ -1,0 +1,47 @@
+module.exports = {
+  apps: [
+    {
+      name: 'ourelads-api',
+      script: 'server/server.js',
+      instances: process.env.WEB_CONCURRENCY || 'max',
+      exec_mode: 'cluster',
+      max_memory_restart: '500M',
+      node_args: '--max-old-space-size=512',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+      },
+      env_development: {
+        NODE_ENV: 'development',
+        PORT: 3000,
+      },
+      error_file: '/var/log/pm2/ourelads-error.log',
+      out_file: '/var/log/pm2/ourelads-out.log',
+      log_file: '/var/log/pm2/ourelads-combined.log',
+      time: true,
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 4000,
+      watch: false,
+      ignore_watch: ['node_modules', 'public/uploads', 'server/database', 'logs'],
+      kill_timeout: 5000,
+      listen_timeout: 8000,
+      cron_restart: '0 4 * * *',
+      post_update: ['npm install'],
+    },
+  ],
+  deploy: {
+    production: {
+      user: 'deploy',
+      host: 'your-server.com',
+      ref: 'origin/main',
+      repo: 'git@github.com:your-org/ourelads.git',
+      path: '/var/www/ourelads',
+      'pre-deploy-local': '',
+      'post-deploy': 'npm install --omit=dev && pm2 reload ecosystem.config.js --env production',
+      'pre-setup': '',
+    },
+  },
+};

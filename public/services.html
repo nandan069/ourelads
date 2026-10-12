@@ -1,111 +1,386 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Services — Ourel Ads</title>
-  <meta name="description" content="Brand films, TVCs, performance videos, micro-dramas, social content, motion graphics and digital marketing." />
+  <meta name="description"
+    content="Brand films, TVCs, performance videos, micro-dramas, social content, motion graphics and digital marketing." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&display=swap"
+    rel="stylesheet" />
   <link rel="icon" type="image/jpeg" href="logo.jpeg" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body data-page="services">
   <div id="site-header"></div>
   <main id="main-content">
-  <section class="page-hero">
-    <div class="page-hero-bg">
-      <img src="hero_bg.jpg" alt="" />
-      <div class="page-hero-overlay"></div>
-    </div>
-    <div class="page-hero-content container">
-      <div class="hero-eyebrow">
-        <span class="hero-eyebrow-line"></span>
-        <span class="hero-eyebrow-text">What we do</span>
+    <section class="page-hero">
+      <div class="page-hero-bg">
+        <img src="hero_bg.jpg" alt="" />
+        <div class="page-hero-overlay"></div>
       </div>
-      <h1>Creative production<br /><em>built for performance.</em></h1>
-      <p class="page-lead">From brand films and TVCs to reels, micro-dramas, motion and digital — we craft communication that connects and converts.</p>
-    </div>
-  </section>
-  <section class="page-section cream">
-    <div class="container">
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">01</div>
-        <div>
-          <h3>Performance Marketing Videos</h3>
-          <p>Short-form videos designed around attention, conversion, leads and product communication. Built for feed, not just for awards.</p>
-          <div class="service-pills"><span>Hooks</span><span>Product demos</span><span>Lead gen</span><span>A/B cuts</span></div>
+      <div class="page-hero-content container" style="text-align: center; max-width: 860px; margin: 0 auto;">
+        <div class="hero-eyebrow" style="margin-left: auto; margin-right: auto;">
+          <span class="hero-eyebrow-line"></span>
+          <span class="hero-eyebrow-text">What we do</span>
+        </div>
+        <h1>Creative production<br /><em>built for performance.</em></h1>
+        <p class="page-lead" style="margin: 0 auto 1.75rem; text-align: center;">From brand films and TVCs to reels, micro-dramas, motion and digital — we craft communication that connects and converts.</p>
+        <div class="services-hero-badges" style="justify-content: center;" data-animate="fade-up">
+          <span class="services-hero-badge">🎬 TVCs &amp; Brand Films</span>
+          <span class="services-hero-badge">⚡ Performance Creatives</span>
+          <span class="services-hero-badge">🎭 Narrative Micro-Dramas</span>
+          <span class="services-hero-badge">✨ 3D Motion &amp; VFX</span>
+          <span class="services-hero-badge">📱 Social-First Reels</span>
         </div>
       </div>
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">02</div>
-        <div>
-          <h3>Brand Films &amp; TVCs</h3>
-          <p>High-quality brand films, TVCs, product films and campaign films that define identity — including work for platforms like upGrad and consumer tech brands.</p>
-          <div class="service-pills"><span>TVC</span><span>Brand film</span><span>Product film</span></div>
+    </section>
+
+    <!-- ═══════════════════════════════════ SERVICES CARDS ═══════════════════════════════════ -->
+    <section class="page-section cream" style="padding-top: 5rem;">
+      <div class="container">
+        
+        <div class="section-header centered" data-animate="fade-up" style="margin-bottom: 2.5rem;">
+          <span class="section-tag">Capabilities Suite</span>
+          <h2 class="section-title">EVERY STAGE OF BRAND COMMUNICATION</h2>
+          <p class="section-sub">Strategy, scripts, casting, cinematography and high-velocity editing — executed under one roof.</p>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="services-filter-bar" data-animate="fade-up">
+          <button class="service-filter-btn active" data-filter="all">All Capabilities (8)</button>
+          <button class="service-filter-btn" data-filter="film">Films &amp; TVCs</button>
+          <button class="service-filter-btn" data-filter="performance">Performance &amp; Social</button>
+          <button class="service-filter-btn" data-filter="production">Production &amp; Motion</button>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="services-cards-grid" id="services-cards-container">
+          
+          <!-- Card 01 -->
+          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">01 · PERFORMANCE</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Performance Marketing Videos</h3>
+            <p class="service-card-pro-desc">Short-form videos engineered around attention hooks, retention curves, product clarity, and lead generation. Built for modern feeds, calibrated for measurable ROAS.</p>
+            <div class="service-card-pro-pills">
+              <span>Attention Hooks</span>
+              <span>Product Demos</span>
+              <span>Lead Gen</span>
+              <span>A/B Variations</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
+          <!-- Card 02 -->
+          <div class="service-card-pro" data-category="film" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">02 · BRAND FILMS</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="3" ry="3"/>
+                  <line x1="7" y1="2" x2="7" y2="22"/>
+                  <line x1="17" y1="2" x2="17" y2="22"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <line x1="2" y1="7" x2="7" y2="7"/>
+                  <line x1="2" y1="17" x2="7" y2="17"/>
+                  <line x1="17" y1="17" x2="22" y2="17"/>
+                  <line x1="17" y1="7" x2="22" y2="7"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Brand Films &amp; TVCs</h3>
+            <p class="service-card-pro-desc">Cinematic brand films, TVCs, product films and anthem campaigns that define identity — including high-profile work for brands like upGrad, Infinix, and Seekho.</p>
+            <div class="service-card-pro-pills">
+              <span>National TVC</span>
+              <span>Brand Anthems</span>
+              <span>Product Launches</span>
+              <span>Cinema Grade</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
+          <!-- Card 03 -->
+          <div class="service-card-pro" data-category="film" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">03 · STORYTELLING</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <path d="M8 10h.01M12 10h.01M16 10h.01"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Micro-Dramas &amp; Storytelling</h3>
+            <p class="service-card-pro-desc">Short narrative content built around real-life situations, relatable characters and emotional arcs — a native cultural language that Indian digital audiences eagerly binge and share.</p>
+            <div class="service-card-pro-pills">
+              <span>Scriptwriting</span>
+              <span>Character Casting</span>
+              <span>Episodic Series</span>
+              <span>Emotional Hooks</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
+          <!-- Card 04 -->
+          <div class="service-card-pro" data-category="production" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">04 · PRODUCTION</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Creative Production</h3>
+            <p class="service-card-pro-desc">Turnkey creative and technical production: Research → Concept → Script → Casting → Shoot → Edit → Delivery. One aligned team, one timeline, and uncompromising standards.</p>
+            <div class="service-card-pro-pills">
+              <span>Director's Treatment</span>
+              <span>Full Crew &amp; Gear</span>
+              <span>Studio Shoots</span>
+              <span>Post-Production</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
+          <!-- Card 05 -->
+          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">05 · CONTENT</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Content Marketing</h3>
+            <p class="service-card-pro-desc">Strategic content systems for brands across digital platforms — developing sustained, episodic brand stories that build loyal communities rather than disposable one-off ads.</p>
+            <div class="service-card-pro-pills">
+              <span>Content Calendars</span>
+              <span>Campaign Themes</span>
+              <span>Thought Leadership</span>
+              <span>Brand IP</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
+          <!-- Card 06 -->
+          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">06 · GROWTH</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Digital Marketing</h3>
+            <p class="service-card-pro-desc">Creative-led digital marketing and brand communication designed for scale, market penetration, and measurable customer acquisition across digital ecosystems.</p>
+            <div class="service-card-pro-pills">
+              <span>Paid Media Strategy</span>
+              <span>Audience Targeting</span>
+              <span>Funnel Scaling</span>
+              <span>Growth Analytics</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
+          <!-- Card 07 -->
+          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">07 · SOCIAL</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                  <line x1="12" y1="18" x2="12.01" y2="18"/>
+                  <polygon points="10 8 15 11 10 14 10 8" fill="currentColor"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Social Media Content</h3>
+            <p class="service-card-pro-desc">Dynamic reels, short-form viral assets, campaign creatives, and platform-first storytelling built specifically for Instagram, YouTube Shorts, and modern feeds.</p>
+            <div class="service-card-pro-pills">
+              <span>9:16 Viral Formats</span>
+              <span>Hook Scripts</span>
+              <span>Batch Shoots</span>
+              <span>Visual Thumbnails</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
+          <!-- Card 08 -->
+          <div class="service-card-pro" data-category="production" data-animate="fade-up">
+            <div class="service-card-pro-header">
+              <span class="service-card-pro-num">08 · MOTION</span>
+              <div class="service-card-pro-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l9 4.9V17L12 22l-9-4.9V7z"/>
+                  <path d="M12 22V12"/>
+                  <path d="M21 7l-9 5-9-5"/>
+                </svg>
+              </div>
+            </div>
+            <h3 class="service-card-pro-title">Motion Graphics &amp; Visual GFX</h3>
+            <p class="service-card-pro-desc">High-end 2D/3D motion graphics, kinetic typography, tech product explainers, visual simulations, and branded motion packages that elevate premium appeal.</p>
+            <div class="service-card-pro-pills">
+              <span>2D/3D Motion</span>
+              <span>Product Explainers</span>
+              <span>Kinetic Titles</span>
+              <span>UI Animations</span>
+            </div>
+            <div class="service-card-pro-footer">
+              <a href="/contact" class="service-card-pro-btn">Start a Project <span class="arrow">→</span></a>
+              <a href="/work" class="service-card-pro-work">View Work</a>
+            </div>
+          </div>
+
         </div>
       </div>
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">03</div>
-        <div>
-          <h3>Micro-Dramas &amp; Storytelling</h3>
-          <p>Short narrative content built around real-life situations, characters and emotional arcs — a language Indian audiences already live in.</p>
-          <div class="service-pills"><span>Scripts</span><span>Casting</span><span>Series</span></div>
+    </section>
+
+    <!-- ═══════════════════════════════════ WHO WE ARE ═══════════════════════════════════ -->
+    <section class="page-section" id="who-we-are" style="background: var(--white); padding: var(--section-gap) 0;">
+      <div class="container two-col">
+        <div class="feature-img-wrap" data-animate="fade-right">
+          <img src="assets/who-we-are.jpg" alt="Ourel Ads Production Studio Team" class="feature-img" />
+          <div class="feature-img-badge">
+            <span class="badge-dot"></span>
+            <span>In-House Cinema Gear &amp; Creative Directors</span>
+          </div>
+        </div>
+        <div class="feature-text-wrap" data-animate="fade-left">
+          <span class="section-tag">Who We Are</span>
+          <h2 class="section-title">A growth partner, not just another vendor.</h2>
+          <p class="feature-para">
+            Ourel Ads was built for modern brands that have outgrown traditional, slow advertising agencies and shallow social mills. We combine high-concept creative direction with performance data to build commercial assets that actually move metrics.
+          </p>
+          <p class="feature-para">
+            Headquartered in New Delhi with expansive studios in Bhopal, our team handles the entire lifecycle: market research, creative concept, scriptwriting, casting, cinematography, offline/online editing, sound design, and color grading.
+          </p>
+          <div class="feature-points">
+            <div class="feature-point">
+              <div class="point-icon">✓</div>
+              <div>
+                <strong>Direct Creative Ownership</strong>
+                <span>Zero agency-vendor markups or miscommunications — work directly with directors and strategists who craft your film.</span>
+              </div>
+            </div>
+            <div class="feature-point">
+              <div class="point-icon">✓</div>
+              <div>
+                <strong>Audience-Centric Storytelling</strong>
+                <span>We understand the cultural language of Indian consumers, creating stories audiences genuinely want to watch.</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <a href="/about" class="btn btn-purple">Explore Our Story →</a>
+          </div>
         </div>
       </div>
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">04</div>
-        <div>
-          <h3>Creative Production</h3>
-          <p>Complete production: Research → Concept → Script → Casting → Shoot → Edit → Delivery. One team, one timeline, one standard.</p>
-          <div class="service-pills"><span>Direction</span><span>Shoot</span><span>Post</span></div>
+    </section>
+
+    <!-- ═══════════════════════════════════ WHY CHOOSE US ═══════════════════════════════════ -->
+    <section class="page-section alt" id="why-choose" style="background: var(--off-white); padding: var(--section-gap) 0;">
+      <div class="container two-col">
+        <div class="feature-text-wrap" data-animate="fade-right">
+          <span class="section-tag">Why Choose Ourel</span>
+          <h2 class="section-title">Engineered for speed.<br />Calibrated for conversion.</h2>
+          <p class="feature-para">
+            We reject the idea that you have to choose between cinematic beauty and commercial ROI. Every camera angle, opening 3-second hook, and musical cue is engineered to capture viewer attention and drive action.
+          </p>
+          <div class="feature-stats-row">
+            <div class="feature-stat-item">
+              <div class="stat-number">100M+</div>
+              <div class="stat-label">Views Generated</div>
+            </div>
+            <div class="feature-stat-item">
+              <div class="stat-number">5x</div>
+              <div class="stat-label">Faster Turnaround</div>
+            </div>
+            <div class="feature-stat-item">
+              <div class="stat-number">100%</div>
+              <div class="stat-label">In-House Production</div>
+            </div>
+          </div>
+          <div class="feature-points">
+            <div class="feature-point">
+              <div class="point-icon">★</div>
+              <div>
+                <strong>Retention &amp; Hook Engineering</strong>
+                <span>We test concepts and opening hooks before shooting, ensuring high viewer completion rates across YouTube, Meta &amp; TV.</span>
+              </div>
+            </div>
+            <div class="feature-point">
+              <div class="point-icon">★</div>
+              <div>
+                <strong>Multi-Platform Cut Packaging</strong>
+                <span>Receive master deliverables ready for broadcast TV, 9:16 reels, interactive display, and varied marketing funnel stages.</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <a href="/contact" class="btn btn-purple">Start a Conversation →</a>
+          </div>
+        </div>
+        <div class="feature-img-wrap" data-animate="fade-left">
+          <img src="assets/why-choose.jpg" alt="Ourel Ads Precision Post-Production Suite" class="feature-img" />
+          <div class="feature-img-badge">
+            <span class="badge-dot"></span>
+            <span>Precision 4K Editing &amp; Master Sound Suite</span>
+          </div>
         </div>
       </div>
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">05</div>
-        <div>
-          <h3>Content Marketing</h3>
-          <p>Strategic content for brands across digital platforms — always-on stories, not one-off ads.</p>
-          <div class="service-pills"><span>Calendars</span><span>Campaigns</span><span>Series</span></div>
-        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ HAVE A BRAND TO BUILD ═══════════════════════════════════ -->
+    <section class="cta-band">
+      <div class="container" data-animate="fade-up">
+        <h2>Have a brand to build?</h2>
+        <p>Let’s talk strategy, creative and production — under one roof.</p>
+        <a href="/contact" class="btn btn-white">Start a Project →</a>
       </div>
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">06</div>
-        <div>
-          <h3>Digital Marketing</h3>
-          <p>Creative-led digital marketing and brand communication designed for scale, impact and measurable growth.</p>
-          <div class="service-pills"><span>Media</span><span>Creative</span><span>Growth</span></div>
-        </div>
-      </div>
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">07</div>
-        <div>
-          <h3>Social Media Content</h3>
-          <p>Reels, short-form videos, campaign creatives and social-first storytelling for Instagram and beyond.</p>
-          <div class="service-pills"><span>Reels</span><span>Creatives</span><span>Thumbnails</span></div>
-        </div>
-      </div>
-      <div class="service-detail" data-animate="fade-up">
-        <div class="service-detail-num">08</div>
-        <div>
-          <h3>Motion Graphics &amp; Visual</h3>
-          <p>Motion graphics, explainer videos, product animations and branded visual content.</p>
-          <div class="service-pills"><span>Motion</span><span>Explainers</span><span>GFX</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <section class="cta-band">
-    <div class="container">
-      <h2>Have a brand to build?</h2>
-      <p>Let’s talk strategy, creative and production — under one roof.</p>
-      <a href="/contact" class="btn btn-white">Start a Project →</a>
-    </div>
-  </section>
-    </main>
+    </section>
+  </main>
   <div id="site-footer"></div>
   <script src="layout.js"></script>
   <script src="main.js"></script>
 </body>
+
 </html>

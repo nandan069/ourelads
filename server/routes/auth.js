@@ -7,7 +7,10 @@ const jwt = require('jsonwebtoken');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const { logActivity } = require('../utils/logger');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ourelads-default-secret-key-change-in-prod';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be set to a secure random string (min 32 chars)');
+}
 
 function authRoutes(db) {
   const router = express.Router();

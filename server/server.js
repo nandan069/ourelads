@@ -8,41 +8,138 @@ const path = require('path');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
 const { initDatabase, seedDatabase } = require('./database/init');
 const authRoutes = require('./routes/auth');
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+const { logger } = require('./utils/logger');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+function createApp(testDb = null) {
+  const app = express();
+  const PORT = process.env.PORT || 3000;
 
-// ─── DATABASE ───
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'database', 'ourelads.db');
-const db = initDatabase(dbPath);
-seedDatabase(db);
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    logger.error('FATAL: JWT_SECRET must be set to a secure random string (min 32 chars)');
+    if (process.env.NODE_ENV === 'production') process.exit(1);
+  }
 
-// ─── SECURITY ───
+  // ─── DATABASE ───
+  const db = testDb || initDatabase(process.env.DATABASE_PATH || path.join(__dirname, 'database', 'ourelads.db'));
+  if (!testDb) seedDatabase(db);
+
+app.use(cookieParser());
+
+// ─── REQUEST LOGGING ───
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.http('HTTP Request', {
+      method: req.method,
+      url: req.originalUrl,
+      status: res.statusCode,
+      duration: `${duration}ms`,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  });
+  next();
+});
+
+// ─── SECURITY HEADERS ───
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://www.google-analytics.com", "https://region1.google-analytics.com"],
+      frameSrc: ["https://www.google.com"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+    },
+  },
   crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  noSniff: true,
+  xssFilter: true,
+  frameguard: { action: 'deny' },
 }));
-app.use(cors());
+
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+}));
+
+// ─── CSRF PROTECTION ───
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  },
+});
+
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/admin') || req.path.startsWith('/api/auth')) {
+    return csrfProtection(req, res, next);
+  }
+  next();
+});
+
+app.use((req, res, next) => {
+  res.locals.csrfToken = req.csrfToken?.();
+  next();
+});
 
 // ─── RATE LIMITING ───
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
   message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
   message: { error: 'Too many login attempts. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
   message: { error: 'Too many submissions. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many admin requests. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // ─── BODY PARSING ───
@@ -89,32 +186,48 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads
 app.get('/api/health', (req, res) => {
   try {
     db.prepare('SELECT 1').get();
-    res.json({ status: 'ok', uptime: Math.floor(process.uptime()), timestamp: new Date().toISOString() });
+    
+    const checks = {
+      database: 'ok',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+      memory: process.memoryUsage(),
+      env: process.env.NODE_ENV || 'development',
+    };
+    
+    res.json({ status: 'ok', ...checks });
   } catch (err) {
-    res.status(500).json({ status: 'error', error: 'Database health check failed' });
+    res.status(500).json({ status: 'error', error: 'Database health check failed', timestamp: new Date().toISOString() });
   }
+});
+
+app.get('/api/health/ready', (req, res) => {
+  try {
+    db.prepare('SELECT 1').get();
+    res.json({ ready: true });
+  } catch (err) {
+    res.status(503).json({ ready: false, error: 'Database not ready' });
+  }
+});
+
+app.get('/api/health/live', (req, res) => {
+  res.json({ alive: true });
 });
 
 // ─── API ROUTES ───
 app.use('/api/auth', authLimiter, authRoutes(db));
 app.use('/api', apiLimiter, publicRoutes(db));
-app.use('/api/admin', apiLimiter, adminRoutes(db));
+app.use('/api/admin', adminLimiter, adminRoutes(db));
+
+// ─── CSRF TOKEN ENDPOINT ───
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken?.() });
+});
 
 // ─── ADMIN PANEL ───
 app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
 app.get(/^\/admin($|\/.*)/, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
-});
-
-// ─── DYNAMIC INSIGHT PAGES (Clean URLs & legacy support) ───
-app.get(['/insight-:slug', '/insight-:slug.html'], (req, res) => {
-  const filePath = path.join(__dirname, '..', 'public', `insight-${req.params.slug}.html`);
-  const fs = require('fs');
-  if (fs.existsSync(filePath)) {
-    return res.sendFile(filePath);
-  }
-  // Fall back to the insights template
-  res.sendFile(path.join(__dirname, '..', 'public', 'insights.html'));
 });
 
 // ─── 404 ───
@@ -127,46 +240,65 @@ app.use((req, res) => {
 
 // ─── ERROR HANDLER ───
 app.use((err, req, res, next) => {
-  console.error('Server error:', err.message);
+  logger.error('Server error', {
+    message: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+  });
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ error: 'File too large. Maximum size is 10MB.' });
+  }
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ error: 'Invalid CSRF token' });
   }
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ─── START ───
-const server = app.listen(PORT, () => {
-  console.log(`\n  ╔═══════════════════════════════════════════╗`);
-  console.log(`  ║   OUREL ADS — CMS Server                  ║`);
-  console.log(`  ║                                           ║`);
-  console.log(`  ║   Website: http://localhost:${PORT}          ║`);
-  console.log(`  ║   Admin:   http://localhost:${PORT}/admin    ║`);
-  console.log(`  ║   API:     http://localhost:${PORT}/api      ║`);
-  console.log(`  ║                                           ║`);
-  console.log(`  ║   Default Login:                          ║`);
-  console.log(`  ║   Username: admin                         ║`);
-  console.log(`  ║   Password: admin123                      ║`);
-  console.log(`  ╚═══════════════════════════════════════════╝\n`);
-});
-
-// ─── GRACEFUL SHUTDOWN & PROCESS HARDENING ───
-function gracefulShutdown(signal) {
-  console.log(`\n[${signal}] Gracefully closing HTTP server & SQLite connection...`);
-  server.close(() => {
-    try {
-      db.close();
-      console.log('Database connection closed cleanly.');
-    } catch (e) {
-      console.error('Error closing database:', e.message);
-    }
-    process.exit(0);
-  });
+  return { app, db };
 }
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Promise Rejection:', reason);
-});
+// ─── START ───
+function startServer() {
+  const { app, db } = createApp();
+  const PORT = process.env.PORT || 3000;
+  
+  const server = app.listen(PORT, () => {
+    logger.info('Server started', {
+      port: PORT,
+      env: process.env.NODE_ENV || 'development',
+      website: `http://localhost:${PORT}`,
+      admin: `http://localhost:${PORT}/admin`,
+      api: `http://localhost:${PORT}/api`,
+    });
+  });
 
-module.exports = app;
+  // ─── GRACEFUL SHUTDOWN & PROCESS HARDENING ───
+  function gracefulShutdown(signal) {
+    logger.info(`[${signal}] Gracefully closing HTTP server & SQLite connection...`);
+    server.close(() => {
+      try {
+        db.close();
+        logger.info('Database connection closed cleanly.');
+      } catch (e) {
+        logger.error('Error closing database', { error: e.message });
+      }
+      process.exit(0);
+    });
+  }
+
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Promise Rejection', { reason });
+  });
+
+  return server;
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { createApp, startServer };
