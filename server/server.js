@@ -103,7 +103,8 @@ const csrfProtection = csrf({
 app.use((req, res, next) => {
   // Exempt login endpoint from CSRF (needed before user has token)
   if (req.path === '/api/auth/login') return next();
-  if (req.path.startsWith('/api/admin') || req.path.startsWith('/api/auth')) {
+  // Include csrf-token endpoint in CSRF protection so token gets generated
+  if (req.path === '/api/csrf-token' || req.path.startsWith('/api/admin') || req.path.startsWith('/api/auth')) {
     return csrfProtection(req, res, next);
   }
   next();
