@@ -5,7 +5,7 @@
 require('dotenv').config();
 const path = require('path');
 const Database = require('better-sqlite3');
-const { migrate, createMigration } = require('./database/migrate');
+const { migrate, createMigration } = require('./server/database/migrate');
 
 const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'server/database/ourelads.db');
 
