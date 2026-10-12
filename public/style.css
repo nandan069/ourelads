@@ -2373,6 +2373,121 @@ ul {
   margin-top: 3rem;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   TESTIMONIALS GRID (3 CARDS IN A ROW)
+═══════════════════════════════════════════════════════════════ */
+.testimonials-grid-section {
+  padding: var(--section-gap) 0;
+  background: var(--purple-ink);
+  position: relative;
+  overflow: hidden;
+}
+
+.testimonials-grid-section::before {
+  content: '"';
+  position: absolute;
+  top: -4rem;
+  left: 5%;
+  font-family: var(--font-display);
+  font-size: 30vw;
+  color: rgba(255, 255, 255, 0.015);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.testimonial-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 2.5rem;
+  transition: all var(--t-mid);
+  display: flex;
+  flex-direction: column;
+}
+
+.testimonial-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(167, 139, 250, 0.3);
+  transform: translateY(-4px);
+}
+
+.testimonial-card .testi-quote-mark {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  line-height: 0.8;
+  color: var(--purple-rich);
+  opacity: 0.6;
+  margin-bottom: 1rem;
+}
+
+.testimonial-card .testi-text {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.75;
+  font-style: italic;
+  margin-bottom: 1.75rem;
+  flex: 1;
+}
+
+.testimonial-card .testi-author {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.testimonial-card .testi-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+}
+
+.testimonial-card .testi-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 0.1rem;
+}
+
+.testimonial-card .testi-role {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .testimonials-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .testimonial-card {
+    padding: 2rem;
+  }
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    CONTACT & FORM (CURVED INPUTS & SLEEK TILES)
@@ -3599,15 +3714,15 @@ a.case-card {
 .blog-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .blog-card {
   background: var(--white);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-lg);
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   transition: all var(--t-mid) var(--ease);
   display: flex;
   flex-direction: column;
@@ -3638,20 +3753,20 @@ a.case-card {
 
 .blog-card-image {
   position: relative;
-  height: 200px;
+  height: 140px;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 .blog-category {
-  font-size: 0.62rem;
+  font-size: 0.55rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--white);
-  padding: 0.35rem 0.85rem;
+  padding: 0.3rem 0.75rem;
   background: rgba(0, 0, 0, 0.3);
   border-radius: var(--r-pill);
   backdrop-filter: blur(8px);
@@ -3660,28 +3775,28 @@ a.case-card {
 }
 
 .blog-card-content {
-  padding: 2rem 1.75rem 2.25rem;
+  padding: 1.5rem 1.25rem 1.75rem;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
 .blog-meta {
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--grey-600);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .blog-card h3 {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--black);
-  line-height: 1.35;
-  margin-bottom: 0.75rem;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
   transition: color var(--t-fast) var(--ease);
 }
 
@@ -3690,18 +3805,18 @@ a.case-card {
 }
 
 .blog-card-content p {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   color: var(--grey-600);
-  line-height: 1.7;
+  line-height: 1.6;
   flex: 1;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .blog-read-more {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.82rem;
+  gap: 0.35rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--purple-rich);
   transition: gap var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
