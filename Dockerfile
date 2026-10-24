@@ -16,6 +16,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Prune dev dependencies before copying to production
+RUN npm prune --omit=dev
+
 # Production stage
 FROM node:22-alpine AS production
 
@@ -28,14 +31,17 @@ RUN apk add --no-cache sqlite-libs vips tini dumb-init
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S -u 1001 -G nodejs appuser
 
-# Copy package files and install production dependencies
+# Copy package files and pruned node_modules from builder
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy built application from builder
+# Copy application files from builder
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/admin ./admin
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/migrate.js ./migrate.js
+COPY --from=builder /app/ecosystem.config.js ./ecosystem.config.js
 
 # Create directories for database, uploads, and backups
 RUN mkdir -p /app/server/database /app/public/uploads /app/server/database/backups && \

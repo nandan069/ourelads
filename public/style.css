@@ -678,7 +678,7 @@ ul {
   display: flex;
   align-items: center;
   width: max-content;
-  animation: marqueeRoll 24s linear infinite;
+  animation: marqueeRoll 34s linear infinite;
 }
 .marquee-inner:hover {
   animation-play-state: paused;
@@ -1081,12 +1081,26 @@ ul {
 }
 .reel-thumb {
   height: 335px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 1.15rem 1.15rem 1.35rem;
   position: relative;
   overflow: hidden;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.reel-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
 }
 .reel-thumb::after {
   content: '';
@@ -1121,35 +1135,6 @@ ul {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.45);
   letter-spacing: 0.05em;
-}
-
-.reel-play-icon {
-  position: absolute;
-  top: 48%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  width: 44px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--t-mid) var(--ease-spring);
-  backdrop-filter: blur(8px);
-}
-.reel-card:hover .reel-play-icon {
-  background: var(--purple-rich);
-  border-color: var(--purple-rich);
-  transform: translate(-50%, -50%) scale(1.15);
-  box-shadow: 0 0 20px rgba(109, 40, 217, 0.7);
-}
-.reel-play-icon svg {
-  width: 17px;
-  height: 17px;
-  fill: white;
 }
 
 .reel-overlay-info {
@@ -1193,6 +1178,42 @@ ul {
   color: var(--white);
   background: rgba(91, 33, 182, 0.35);
   transform: scale(1.06);
+}
+
+.reel-player-dialog {
+  position: fixed;
+  width: min(92vw, 480px);
+  max-width: none;
+  max-height: 92vh;
+  padding: 2.75rem 1rem 1rem;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--r-md);
+  background: #080808;
+  color: white;
+}
+.reel-player-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.84);
+}
+.reel-player-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.65rem;
+  border: 0;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: white;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.reel-player-video {
+  display: block;
+  width: 100%;
+  max-height: calc(92vh - 4rem);
+  aspect-ratio: 9 / 16;
+  background: #000;
+  object-fit: contain;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -3154,18 +3175,6 @@ ul {
   z-index: 1;
   filter: drop-shadow(0 8px 18px rgba(0,0,0,0.25));
 }
-.reel-thumb img.reel-logo {
-  position: absolute;
-  top: 46%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 62%;
-  max-height: 70px;
-  object-fit: contain;
-  z-index: 2;
-  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.35));
-}
-
 /* ══════════════════════════════════════════════════════════════
    SERVICES PAGE — MODERN LUXURY CARD GRID REDESIGN
 ══════════════════════════════════════════════════════════════ */

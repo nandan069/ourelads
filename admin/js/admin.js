@@ -146,10 +146,10 @@ function timeAgo(dateStr) {
 function escapeHtml(text) {
   if (!text) return '';
   return String(text)
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
 
@@ -463,6 +463,7 @@ function serviceFields() { return [
 ]; }
 
 function caseFields() { return [
+  { name: 'title', label: 'Case Study Title', type: 'text', help: 'Optional: defaults to Brand - Campaign' },
   { name: 'brand', label: 'Client Brand', type: 'text', required: true, tableShow: true },
   { name: 'campaign', label: 'Campaign Title', type: 'text', required: true, tableShow: true },
   { name: 'color', label: 'Card Color', type: 'text', help: 'Hex color code e.g. #111111' },
@@ -707,13 +708,14 @@ async function renderHomepage(el) {
   const data = await api('/admin/homepage');
 
   const SECTION_CONFIG = {
-    hero_section: { title: '✨ Hero Header Section', desc: 'Main title, subheadline, call-to-action button, and hero background at top of homepage.' },
-    clients_section: { title: '🏢 Client Logos Section', desc: 'Heading and brand marquee showcase.' },
+    hero: { title: '✨ Hero Header Section', desc: 'Main title, subheadline, call-to-action button, and hero background at top of homepage.' },
+    about: { title: 'About Section', desc: 'Agency introduction, process summary, and call to action.' },
+    marquee: { title: '🏢 Client Logos Section', desc: 'Heading and brand marquee showcase.' },
+    work: { title: '🎨 Portfolio Showcase Section', desc: 'Work gallery heading and showreel labels.' },
+    reels: { title: '🎬 Video Reels Ribbon', desc: 'Autoscrolling video showcase ribbon.' },
     services_section: { title: '💼 Agency Services Section', desc: 'Services section titles and description.' },
-    portfolio_section: { title: '🎨 Portfolio Showcase Section', desc: 'Work gallery heading and filters.' },
-    reels_section: { title: '🎬 Video Reels Ribbon', desc: 'Autoscrolling video showcase ribbon.' },
-    cases_section: { title: '📋 Case Studies Section', desc: 'Case studies section titles.' },
-    team_section: { title: '👥 Our Team Section', desc: 'Team section headline and subtext.' },
+    process_section: { title: 'Our Process Section', desc: 'Process section heading and label.' },
+    philosophy: { title: 'Our Philosophy Section', desc: 'The Ourel framework heading and supporting text.' },
     testimonials_section: { title: '💬 Client Reviews Section', desc: 'Testimonials carousel section title.' },
     contact_section: { title: '📬 Contact Us Section', desc: 'Contact section headline and call to action.' },
   };
@@ -730,8 +732,13 @@ async function renderHomepage(el) {
     ${Object.keys(SECTION_CONFIG).map(sec => {
       const config = SECTION_CONFIG[sec];
       const secData = data[sec] || {};
-      const previewText = secData.headline || secData.title || secData.tag || 'Configured section';
-      const safePreview = escapeHtml(previewText).replace(/<br\s*\/?>/gi, ' ');
+      const previewText = secData.headline || secData.title || secData.tag || [
+        secData.headline_prefix,
+        secData.headline_highlight,
+        secData.headline_suffix,
+        secData.headline_italic,
+      ].filter(Boolean).join(' ') || 'Configured section';
+      const safePreview = escapeHtml(String(previewText).replace(/<br\s*\/?>/gi, ' ').replace(/<\/?em>/gi, '').replace(/<[^>]*>/g, ''));
 
       return `
         <div class="page-section-card">
@@ -828,7 +835,7 @@ async function renderLeads(el, pg = 1, status = '', search = '') {
   el.innerHTML = `
     <div class="page-header">
       <div><h1 class="page-title">Contact Messages & Leads</h1><p class="page-subtitle">${res.total} total inquiries</p></div>
-      <a href="/api/admin/leads-export" class="btn btn-ghost" target="_blank">📥 Export CSV File ↗</a>
+      <button type="button" class="btn btn-ghost" onclick="exportLeadsCsv()">📥 Export CSV File</button>
     </div>
     
     <div class="toolbar">
@@ -1211,12 +1218,34 @@ async function renderBackup(el) {
         <div class="card-header"><h3>📥 Export Contact Submissions</h3></div>
         <div class="card-body">
           <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:16px">Download all inquiry form messages as a clean Excel/CSV file.</p>
-          <a href="/api/admin/leads-export" class="btn btn-ghost" target="_blank">Download CSV File ↗</a>
+          <button type="button" class="btn btn-ghost" onclick="exportLeadsCsv()">Download CSV File</button>
         </div>
       </div>
     </div>
   `;
 }
+
+async function exportLeadsCsv() {
+  try {
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch('/api/admin/leads-export', { headers, credentials: 'same-origin' });
+    if (!res.ok) throw new Error('Failed to export leads');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ourelads_leads_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    toast('Leads exported successfully!');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+window.exportLeadsCsv = exportLeadsCsv;
 
 async function createBackup() {
   try {

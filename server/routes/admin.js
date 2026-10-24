@@ -5,7 +5,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const { logger, logActivity, createRevision } = require('../utils/logger');
 
@@ -99,7 +99,17 @@ function adminRoutes(db) {
     // CREATE
     router.post(`/${entityPath}`, (req, res) => {
       try {
+        if (tableName === 'case_studies' && !req.body.title) {
+          req.body.title = req.body.campaign ? `${req.body.brand ? req.body.brand + ' - ' : ''}${req.body.campaign}` : (req.body.brand ? `${req.body.brand} Case Study` : 'Case Study');
+        }
         const tableCols = db.prepare(`PRAGMA table_info(${tableName})`).all().map(c => c.name).filter(c => c !== 'id');
+        if (tableCols.includes('slug') && !req.body.slug) {
+          const rawSlugSource = req.body.title || req.body.name || req.body.campaign || entityLabel;
+          let generatedSlug = String(rawSlugSource).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          if (!generatedSlug) generatedSlug = `${entityPath}-${Date.now()}`;
+          const existingSlug = db.prepare(`SELECT id FROM ${tableName} WHERE slug = ?`).get(generatedSlug);
+          req.body.slug = existingSlug ? `${generatedSlug}-${Date.now().toString().slice(-4)}` : generatedSlug;
+        }
         const safeEntries = Object.entries(req.body).filter(([k]) => tableCols.includes(k));
         if (!safeEntries.length) return res.status(400).json({ error: 'No valid data provided' });
 
@@ -256,7 +266,7 @@ function adminRoutes(db) {
     const total = db.prepare(countSql).get(...params).total;
     sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     const rows = db.prepare(sql).all(...params, perPage, offset);
-    res.json({ data: rows, total, page: pageNum, totalPages: Math.ceil(total / perPage) });
+    res.json({ data: rows, total, page: pageNum, totalPages: Math.ceil(total / perPage) || 1 });
   });
 
   router.get('/leads/:id', (req, res) => {
@@ -300,7 +310,7 @@ function adminRoutes(db) {
     const total = db.prepare(countSql).get(...params).total;
     sql += ' ORDER BY fs.created_at DESC LIMIT ? OFFSET ?';
     const rows = db.prepare(sql).all(...params, perPage, offset);
-    res.json({ data: rows, total, page: pageNum, totalPages: Math.ceil(total / perPage) });
+    res.json({ data: rows, total, page: pageNum, totalPages: Math.ceil(total / perPage) || 1 });
   });
 
   // ─── FORMS (custom forms) ───
@@ -346,7 +356,7 @@ function adminRoutes(db) {
     if (conds.length) { const w = ' WHERE ' + conds.join(' AND '); sql += w; countSql += w; }
     const total = db.prepare(countSql).get(...params).total;
     sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    res.json({ data: db.prepare(sql).all(...params, perPage, offset), total, page: pageNum, totalPages: Math.ceil(total / perPage) });
+    res.json({ data: db.prepare(sql).all(...params, perPage, offset), total, page: pageNum, totalPages: Math.ceil(total / perPage) || 1 });
   });
 
   router.delete('/media/:id', requireRole('super_admin', 'admin'), (req, res) => {
@@ -377,7 +387,7 @@ function adminRoutes(db) {
     if (user_id) { sql += ' WHERE al.user_id = ?'; countSql += ' WHERE user_id = ?'; params.push(parseInt(user_id)); }
     const total = db.prepare(countSql).get(...params).total;
     sql += ' ORDER BY al.created_at DESC LIMIT ? OFFSET ?';
-    res.json({ data: db.prepare(sql).all(...params, perPage, offset), total, page: pageNum, totalPages: Math.ceil(total / perPage) });
+    res.json({ data: db.prepare(sql).all(...params, perPage, offset), total, page: pageNum, totalPages: Math.ceil(total / perPage) || 1 });
   });
 
   // ─── REVISIONS ───

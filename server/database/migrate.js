@@ -21,6 +21,7 @@ function ensureMigrationsTable(db) {
 }
 
 function getAppliedMigrations(db) {
+  ensureMigrationsTable(db);
   const rows = db.prepare(`SELECT name FROM ${MIGRATIONS_TABLE} ORDER BY applied_at`).all();
   return new Set(rows.map(r => r.name));
 }

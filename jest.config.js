@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/tests/**/*.test.js'],
+  transform: {},
   collectCoverageFrom: [
     'server/**/*.js',
     '!server/server.js',
@@ -11,7 +12,4 @@ module.exports = {
   verbose: true,
   testTimeout: 10000,
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  transformIgnorePatterns: [
-    '/node_modules/(?!uuid)'
-  ],
 };

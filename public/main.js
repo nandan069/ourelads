@@ -124,7 +124,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     { name: 'Bansal Group', logo: 'assets/bansal-group.jpeg', bg_color: '#fffaf5' },
     { name: 'FatakPay', logo: 'assets/fatakpay.jpeg', bg_color: '#fff8f2' },
     { name: 'Bachatt', logo: 'assets/bachatt.jpeg', bg_color: '#3b2bd6' },
-    { name: 'Jar', logo: 'assets/jar.jpeg', bg_color: '#16132a' }
+    { name: 'Jar', logo: 'assets/jar.jpeg', bg_color: '#16132a' },
+    { name: 'Oolka', logo: 'assets/IMG_2402.PNG', bg_color: '#1a6fff' },
+    { name: 'Dainik Bhaskar', logo: 'assets/IMG_2403.PNG', bg_color: '#ffffff' },
+    { name: 'Guru', logo: 'assets/IMG_2404.JPG.jpeg', bg_color: '#f0f0f0' },
+    { name: 'HabitGold', logo: 'assets/WhatsApp Image 2026-10-13 at 11.59.18 AM.jpeg', bg_color: '#7b2cbf' }
   ];
 
   const clients = await fetchApiData('/clients', fallbackClients);
@@ -224,30 +228,127 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const reelsData = await fetchApiData('/reels', fallbackReels);
 
+  const reelVideoAssets = [
+    { brand: 'Bachata', slug: 'bachata', title: 'Social Campaign', category: 'Social', logo: 'assets/bachatt.jpeg' },
+    { brand: 'Brands.live', slug: 'brand-live', title: 'Creator Economy Film', category: 'Creative', logo: 'assets/brands-live.jpeg' },
+    { brand: 'Dainik Bhaskar', slug: 'dainik-bhaskar', title: 'Brand Story', category: 'Brand Film', logo: 'assets/IMG_2403.PNG' },
+    { brand: 'FatakPay', slug: 'fatak-pay', title: 'Awareness Campaign', category: 'Performance', logo: 'assets/fatakpay.jpeg' },
+    { brand: 'GoCredit', slug: 'go-credit', title: 'Credit Score Campaign', category: 'Micro-Drama', logo: 'assets/gocredit.jpeg' },
+    { brand: 'GoodScore', slug: 'good-score', title: 'Financial Wellbeing Reel', category: 'Performance', logo: 'assets/goodscore.jpeg' },
+    { brand: 'HabitGold', slug: 'habit-gold', title: 'Social Campaign', category: 'Social', logo: 'assets/WhatsApp Image 2026-10-13 at 11.59.18 AM.jpeg' },
+    { brand: 'Jar', slug: 'jar', title: 'Brand Campaign', category: 'Performance', logo: 'assets/jar.jpeg' },
+    { brand: 'Seekho', slug: 'seekho', title: 'Learning Platform Reel', category: 'Social Ad', logo: 'assets/seekho.jpeg' },
+    { brand: 'Upgrade', slug: 'upgrade', title: 'Education Campaign', category: 'Performance', logo: 'assets/IMG_2402.PNG' },
+    { brand: 'Vyapar', slug: 'vyapar', title: 'SME Business Story', category: 'Storytelling', logo: 'assets/vyapar.jpeg' },
+  ];
+  const reelBrandKey = brand => (brand || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const reelVideos = reelVideoAssets.map(asset => {
+    const configuredReel = reelsData.find(reel => reelBrandKey(reel.brand) === reelBrandKey(asset.brand));
+    return {
+      ...asset,
+      ...configuredReel,
+      video: `/assets/reels/${asset.slug}.mp4`,
+      poster: `/assets/reels/${asset.slug}.jpg`,
+    };
+  });
+
   const reelsTrack = document.getElementById('reels-track');
-  const allReels = [...reelsData, ...reelsData];
+  const allReels = [...reelVideos, ...reelVideos];
   if (reelsTrack) {
     reelsTrack.innerHTML = allReels.map((r, i) => {
       const clientBg = clients.find(c => (c.name || c.brand) === r.brand)?.bg_color;
       return `
-      <div class="reel-card" data-brand="${r.brand}">
-        <div class="reel-thumb" style="background:${clientBg || bgColors[i % bgColors.length]}">
+      <article class="reel-card" data-brand="${r.brand}">
+        <button class="reel-thumb" type="button" data-video="${r.video}" data-poster="${r.poster}" aria-label="Play ${r.brand}: ${r.title}" style="background-color:${clientBg || bgColors[i % bgColors.length]}">
+          <video class="reel-preview" muted loop playsinline preload="none" poster="${r.poster}" data-src="${r.video}" aria-hidden="true"></video>
           <div class="reel-top-bar">
             <span class="reel-brand-pill">${r.brand}</span>
             <span class="reel-badge">${r.category}</span>
-          </div>
-          <img class="reel-logo" src="${r.logo || r.thumbnail}" alt="${r.brand}" />
-          <div class="reel-play-icon">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
           <div class="reel-overlay-info">
             <span class="reel-brand-sub">${r.brand}</span>
             <div class="reel-title">${r.title}</div>
           </div>
-        </div>
-      </div>
+        </button>
+      </article>
     `;}).join('');
   }
+
+  let reelPlayerDialog = document.getElementById('reel-player-dialog');
+  let reelPlayerVideo = document.getElementById('reel-player-video');
+  if (reelsTrack && (!reelPlayerDialog || !reelPlayerVideo)) {
+    if (!reelPlayerDialog) {
+      reelPlayerDialog = document.createElement('dialog');
+      reelPlayerDialog.className = 'reel-player-dialog';
+      reelPlayerDialog.id = 'reel-player-dialog';
+      reelPlayerDialog.setAttribute('aria-label', 'Featured video');
+      reelPlayerDialog.innerHTML = `
+        <button class="reel-player-close" id="reel-player-close" type="button" aria-label="Close video">&times;</button>
+        <video class="reel-player-video" id="reel-player-video" controls playsinline preload="none"></video>
+      `;
+      document.body.appendChild(reelPlayerDialog);
+    }
+    reelPlayerVideo = document.getElementById('reel-player-video');
+  }
+
+  const visibleReelPreviews = new Map();
+  const releaseReelPreview = video => {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  };
+  const updateReelPreviews = () => {
+    if (reelPlayerDialog?.open) return;
+    visibleReelPreviews.forEach((ratio, video) => {
+      if (ratio <= 0) {
+        releaseReelPreview(video);
+        return;
+      }
+      if (!video.getAttribute('src')) video.src = video.dataset.src;
+      video.play().catch(() => {});
+    });
+  };
+  const reelPreviewObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) visibleReelPreviews.set(entry.target, entry.intersectionRatio);
+        else visibleReelPreviews.delete(entry.target);
+      });
+      updateReelPreviews();
+      entries.filter(entry => !entry.isIntersecting).forEach(entry => releaseReelPreview(entry.target));
+    }, { threshold: [0, 0.2, 1] })
+    : null;
+  reelsTrack?.querySelectorAll('.reel-preview').forEach(video => reelPreviewObserver?.observe(video));
+
+  const stopReelVideo = () => {
+    reelPlayerVideo?.pause();
+    if (reelPlayerVideo) {
+      reelPlayerVideo.removeAttribute('src');
+      reelPlayerVideo.removeAttribute('poster');
+      reelPlayerVideo.load();
+    }
+  };
+  const closeReelPlayer = () => {
+    stopReelVideo();
+    reelPlayerDialog?.close();
+  };
+  reelsTrack?.addEventListener('click', event => {
+    const playButton = event.target.closest('[data-video]');
+    if (!playButton || !reelPlayerVideo || !reelPlayerDialog) return;
+    visibleReelPreviews.forEach((ratio, video) => releaseReelPreview(video));
+    reelPlayerVideo.src = playButton.dataset.video;
+    reelPlayerVideo.poster = playButton.dataset.poster;
+    reelPlayerDialog.showModal();
+    reelPlayerVideo.play().catch(() => {});
+  });
+  document.getElementById('reel-player-close')?.addEventListener('click', closeReelPlayer);
+  reelPlayerDialog?.addEventListener('click', event => {
+    if (event.target === reelPlayerDialog) closeReelPlayer();
+  });
+  reelPlayerDialog?.addEventListener('close', () => {
+    stopReelVideo();
+    updateReelPreviews();
+  });
 
   const reelsWrapper = document.querySelector('.reels-scroll-wrapper');
   const prevReel = document.getElementById('reel-prev');
@@ -433,6 +534,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     teamGrid.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
   }
 
+  /* ══════════════════════════════════════════
+     BLOG POSTS DYNAMIC RENDERING (BLOG PAGE)
+  ══════════════════════════════════════════ */
+  const blogGrid = document.querySelector('.blog-grid');
+  if (blogGrid) {
+    try {
+      const blogData = await fetchApiData('/blog', null);
+      const posts = blogData?.posts || (Array.isArray(blogData) ? blogData : null);
+      if (posts && posts.length > 0) {
+        const catColors = [
+          'linear-gradient(135deg, #6D28D9 0%, #A78BFA 100%)',
+          'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
+          'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+          'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
+          'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
+          'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)'
+        ];
+        blogGrid.innerHTML = posts.map((post, idx) => {
+          const bg = catColors[idx % catColors.length];
+          const dateStr = post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+          const author = post.author || 'Ourel Ads';
+          const excerpt = post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').slice(0, 140) + '...' : '');
+          return `
+            <article class="blog-card" style="--card-bg: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);">
+              <div class="blog-card-image" style="background: ${bg}; ${post.featured_image ? `background-image:url('${post.featured_image}');background-size:cover;background-position:center;` : ''}">
+                <span class="blog-category">${post.category_name || post.tags || 'Insights'}</span>
+              </div>
+              <div class="blog-card-content">
+                <div class="blog-meta">${dateStr} · By ${author}</div>
+                <h3>${post.title}</h3>
+                <p>${excerpt}</p>
+                <a href="/contact" class="blog-read-more">Learn More <span aria-hidden="true">→</span></a>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+    } catch (e) {
+      /* Keep static fallback */
+    }
+  }
+
 /* ══════════════════════════════════════════
       TESTIMONIALS DATA + RENDERING
    ══════════════════════════════════════════ */
@@ -585,6 +728,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       form.reset();
       if (success) {
+        success.innerHTML = '<span>✓</span> Thank you! We have received your message and will be in touch shortly.';
         success.hidden = false;
         success.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
@@ -597,7 +741,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       );
       window.location.href = `mailto:info@ourelads.com?subject=${subject}&body=${body}`;
       form.reset();
-      if (success) success.hidden = false;
+      if (success) {
+        success.innerHTML = '<span>✓</span> Opening your email client…';
+        success.hidden = false;
+      }
       setTimeout(() => { if (success) success.hidden = true; }, 5000);
     } finally {
       submit.textContent = origText;

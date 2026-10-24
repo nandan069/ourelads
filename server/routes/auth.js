@@ -35,10 +35,22 @@ function authRoutes(db) {
       );
 
       logActivity(db, user.id, 'login', 'user', user.id, null, req.ip);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000,
+      });
       res.json({ token, user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role } });
     } catch (err) {
       res.status(500).json({ error: 'Server error' });
     }
+  });
+
+  // POST /api/auth/logout
+  router.post('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ message: 'Logged out successfully' });
   });
 
   // GET /api/auth/me

@@ -85,6 +85,42 @@ describe('Public API Endpoints', () => {
     expect(typeof res.body).toBe('object');
     expect(res.body.site_name).toBe('Ourel Ads');
   });
+
+  test('GET /api/reels returns array', async () => {
+    const res = await request(app).get('/api/reels');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /api/testimonials returns array', async () => {
+    const res = await request(app).get('/api/testimonials');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /api/team returns array', async () => {
+    const res = await request(app).get('/api/team');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /api/stats returns array', async () => {
+    const res = await request(app).get('/api/stats');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /api/cases returns array', async () => {
+    const res = await request(app).get('/api/cases');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /api/homepage returns content object', async () => {
+    const res = await request(app).get('/api/homepage');
+    expect(res.status).toBe(200);
+    expect(typeof res.body).toBe('object');
+  });
 });
 
 describe('Auth Endpoints', () => {
@@ -236,6 +272,93 @@ describe('Admin Endpoints (with auth)', () => {
     expect(res.body.data).toBeDefined();
     expect(Array.isArray(res.body.data)).toBe(true);
   });
+
+  test('POST, PUT, and DELETE /api/admin/clients creates, updates, and deletes', async () => {
+    // Create
+    const createRes = await request(app)
+      .post('/api/admin/clients')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Jest Test Brand', logo: '/assets/test.jpeg', is_active: 1 });
+    expect(createRes.status).toBe(201);
+    const clientId = createRes.body.id;
+    expect(clientId).toBeDefined();
+
+    // Update
+    const updateRes = await request(app)
+      .put(`/api/admin/clients/${clientId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Jest Test Brand Updated' });
+    expect(updateRes.status).toBe(200);
+
+    // Verify
+    const getRes = await request(app)
+      .get(`/api/admin/clients/${clientId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.name).toBe('Jest Test Brand Updated');
+
+    // Delete
+    const delRes = await request(app)
+      .delete(`/api/admin/clients/${clientId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(delRes.status).toBe(200);
+  });
+
+  test('GET /api/admin/leads-export returns CSV', async () => {
+    const res = await request(app)
+      .get('/api/admin/leads-export')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/csv');
+  });
+
+  test('GET /api/admin/dashboard with query token works', async () => {
+    const res = await request(app)
+      .get(`/api/admin/dashboard?token=${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.leads).toBeDefined();
+  });
+
+  test('POST /api/admin/cases auto-generates title if omitted', async () => {
+    const res = await request(app)
+      .post('/api/admin/cases')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ brand: 'Acme Brand', campaign: 'Viral Campaign' });
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBeDefined();
+
+    const getRes = await request(app)
+      .get(`/api/admin/cases/${res.body.id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.title).toContain('Acme Brand');
+    expect(getRes.body.slug).toBeDefined();
+
+    // Clean up
+    await request(app)
+      .delete(`/api/admin/cases/${res.body.id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+  });
+
+  test('POST /api/admin/projects creates project with brand and auto-generated slug', async () => {
+    const res = await request(app)
+      .post('/api/admin/projects')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'New Launch', brand: 'SuperBrand', description: 'Desc' });
+    expect(res.status).toBe(201);
+
+    const getRes = await request(app)
+      .get(`/api/admin/projects/${res.body.id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.brand).toBe('SuperBrand');
+    expect(getRes.body.slug).toBe('new-launch');
+
+    // Clean up
+    await request(app)
+      .delete(`/api/admin/projects/${res.body.id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+  });
 });
 
 describe('Database', () => {
@@ -272,7 +395,7 @@ describe('Database', () => {
     const serviceCount = db.prepare('SELECT COUNT(*) as c FROM services').get().c;
     
     expect(userCount).toBeGreaterThan(0);
-    expect(clientCount).toBe(10);
+    expect(clientCount).toBe(14);
     expect(serviceCount).toBe(8);
   });
 

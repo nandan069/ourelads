@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'ourelads-api',
       script: 'server/server.js',
-      instances: process.env.WEB_CONCURRENCY || 'max',
+      instances: process.env.WEB_CONCURRENCY || 1,
       exec_mode: 'cluster',
       max_memory_restart: '500M',
       node_args: '--max-old-space-size=512',

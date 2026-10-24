@@ -18,7 +18,7 @@ if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-function createBackup() {
+async function createBackup() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const backupName = `ourelads_backup_${timestamp}.db`;
   const backupPath = path.join(BACKUP_DIR, backupName);
@@ -28,7 +28,7 @@ function createBackup() {
   try {
     logger.info('Starting database backup', { backupPath });
     
-    db.backup(backupPath);
+    await db.backup(backupPath);
     
     const stats = fs.statSync(backupPath);
     logger.info('Backup completed', { 
@@ -78,14 +78,16 @@ function uploadToS3(filePath, fileName) {
 }
 
 if (require.main === module) {
-  try {
-    createBackup();
-    logger.info('Backup script completed successfully');
-    process.exit(0);
-  } catch (err) {
-    logger.error('Backup script failed', { error: err.message });
-    process.exit(1);
-  }
+  (async () => {
+    try {
+      await createBackup();
+      logger.info('Backup script completed successfully');
+      process.exit(0);
+    } catch (err) {
+      logger.error('Backup script failed', { error: err.message });
+      process.exit(1);
+    }
+  })();
 }
 
 module.exports = { createBackup, cleanupOldBackups };

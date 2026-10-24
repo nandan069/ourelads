@@ -48,7 +48,7 @@
       <header class="header" id="header">
         <nav class="nav container">
           <a href="/" class="nav-logo" id="nav-logo">
-            <img src="logo.jpeg" alt="Ourel Ads Logo" class="brand-logo-img" />
+            <img src="/logo.jpeg" alt="Ourel Ads Logo" class="brand-logo-img" />
             <span class="logo-text">OUREL<span class="logo-accent"> ADS</span></span>
           </a>
           <ul class="nav-menu" id="nav-menu">${navItems}</ul>
@@ -70,7 +70,7 @@
         <div class="container footer-inner">
           <div class="footer-brand">
             <div class="footer-logo">
-              <img src="logo.jpeg" alt="Ourel Ads Logo" class="footer-logo-img" />
+              <img src="/logo.jpeg" alt="Ourel Ads Logo" class="footer-logo-img" />
               <span>OUREL<span class="logo-accent"> ADS</span></span>
             </div>
             <p class="footer-tagline">Ideas / Content / Impact</p>

@@ -71,8 +71,9 @@ server/database/*.db-shm
 server/database/*.db-wal
 server/database/backups/
 
-# Uploads
+# Uploads & Raw Video Footage
 public/uploads/*
+public/assets/websites videos/
 
 # IDE
 .vscode/
@@ -93,3 +94,4 @@ coverage/
 
 # Logs directory
 logs/
+.github/

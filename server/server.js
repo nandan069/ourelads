@@ -20,6 +20,8 @@ function createApp(testDb = null) {
   const app = express();
   const PORT = process.env.PORT || 3000;
 
+  app.set('trust proxy', 1);
+
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     logger.error('FATAL: JWT_SECRET must be set to a secure random string (min 32 chars)');
     if (process.env.NODE_ENV === 'production') process.exit(1);
@@ -53,7 +55,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
@@ -158,7 +161,7 @@ app.use((req, res, next) => {
     const isStaticAsset = req.path.match(/\.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|map|json)$/i) || req.path.startsWith("/uploads");
     if (!isStaticAsset) {
       try {
-        const cleanPath = (req.path === "/" || req.path === "") ? "/index.html" : req.path;
+        const cleanPath = (req.path === "" || req.path === "/index.html") ? "/" : req.path;
         const ip = req.headers["x-forwarded-for"] ? req.headers["x-forwarded-for"].split(",")[0].trim() : (req.ip || "");
         db.prepare("INSERT INTO page_analytics (page_path, ip_address, user_agent) VALUES (?, ?, ?)").run(
           cleanPath,

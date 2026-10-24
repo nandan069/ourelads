@@ -19,6 +19,7 @@ function initDatabase(dbPath) {
   }
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
+  db.pragma('busy_timeout = 5000');
 
   // ─── CREATE TABLES ───
   db.exec(`
@@ -155,6 +156,7 @@ function initDatabase(dbPath) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       slug TEXT,
+      brand TEXT,
       client_id INTEGER,
       category_id INTEGER,
       category_slug TEXT,
@@ -182,6 +184,7 @@ function initDatabase(dbPath) {
       title TEXT NOT NULL,
       brand TEXT,
       category TEXT,
+      logo TEXT,
       thumbnail TEXT,
       video_url TEXT,
       platform TEXT,
@@ -496,6 +499,21 @@ function initDatabase(dbPath) {
     CREATE INDEX IF NOT EXISTS idx_nav_location ON navigation_items(location);
   `);
 
+  try {
+    const projectCols = db.prepare('PRAGMA table_info(projects)').all().map(c => c.name);
+    if (!projectCols.includes('brand')) {
+      db.prepare('ALTER TABLE projects ADD COLUMN brand TEXT').run();
+      db.prepare('UPDATE projects SET brand = (SELECT name FROM clients WHERE clients.id = projects.client_id) WHERE client_id IS NOT NULL').run();
+    }
+    const reelCols = db.prepare('PRAGMA table_info(reels)').all().map(c => c.name);
+    if (!reelCols.includes('logo')) {
+      db.prepare('ALTER TABLE reels ADD COLUMN logo TEXT').run();
+      db.prepare('UPDATE reels SET logo = (SELECT logo FROM clients WHERE clients.id = reels.client_id) WHERE client_id IS NOT NULL').run();
+    }
+  } catch (migErr) {
+    logger.warn('Schema check warning', { error: migErr.message });
+  }
+
   return db;
 }
 
@@ -602,6 +620,10 @@ function seedDatabase(db) {
     ['FatakPay', 'assets/fatakpay.jpeg', '#fff8f2', 8],
     ['Bachatt', 'assets/bachatt.jpeg', '#3b2bd6', 9],
     ['Jar', 'assets/jar.jpeg', '#16132a', 10],
+    ['Oolka', 'assets/IMG_2402.PNG', '#1a6fff', 11],
+    ['Dainik Bhaskar', 'assets/IMG_2403.PNG', '#ffffff', 12],
+    ['Guru', 'assets/IMG_2404.JPG.jpeg', '#f0f0f0', 13],
+    ['HabitGold', 'assets/WhatsApp Image 2026-10-13 at 11.59.18 AM.jpeg', '#7b2cbf', 14],
   ];
   clientsData.forEach(c => insertClient.run(c[0], c[1], c[2], c[3]));
 

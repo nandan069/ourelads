@@ -16,19 +16,17 @@ process.env.ALLOWED_ORIGINS = 'http://localhost:3000';
 const Database = require('better-sqlite3');
 const { initDatabase, seedDatabase } = require('../server/database/init');
 
-global.testDb = new Database(':memory:');
-global.testDb.pragma('journal_mode = WAL');
-global.testDb.pragma('foreign_keys = ON');
-
-// Initialize schema only (skip seeding for tests)
 const db = new Database(':memory:');
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+db.pragma('busy_timeout = 5000');
 initDatabase(db);
 seedDatabase(db);
 
 global.testDb = db;
 
 afterAll(() => {
-  global.testDb.close();
+  if (global.testDb) {
+    global.testDb.close();
+  }
 });

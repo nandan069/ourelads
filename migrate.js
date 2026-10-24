@@ -12,6 +12,7 @@ const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'server/databa
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+db.pragma('busy_timeout = 5000');
 
 const command = process.argv[2];
 const arg = process.argv[3];
@@ -36,7 +37,7 @@ async function main() {
         break;
 
       case 'status':
-        const { getPendingMigrations, getAppliedMigrations } = require('./database/migrate');
+        const { getPendingMigrations, getAppliedMigrations } = require('./server/database/migrate');
         const pending = getPendingMigrations(db);
         const applied = getAppliedMigrations(db);
         console.log('Applied migrations:', [...applied].join(', ') || 'none');
