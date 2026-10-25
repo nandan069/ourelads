@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ══════════════════════════════════════════
      HEADER — STICKY + HAMBURGER + SCROLL PROGRESS
   ══════════════════════════════════════════ */
-  const header        = document.getElementById('header');
-  const hamburger     = document.getElementById('hamburger');
-  const navMenu       = document.getElementById('nav-menu');
-  const scrollProgress= document.getElementById('scroll-progress');
+  const header = document.getElementById('header');
+  const hamburger = document.getElementById('hamburger');
+  const navMenu = document.getElementById('nav-menu');
+  const scrollProgress = document.getElementById('scroll-progress');
 
   window.addEventListener('scroll', () => {
     header?.classList.toggle('scrolled', window.scrollY > 40);
@@ -76,12 +76,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const el    = entry.target;
+          const el = entry.target;
           const target = parseInt(el.dataset.target, 10);
           const duration = 1800;
-          const step   = Math.ceil(target / (duration / 20));
-          let current  = 0;
-          const timer  = setInterval(() => {
+          const step = Math.ceil(target / (duration / 20));
+          let current = 0;
+          const timer = setInterval(() => {
             current = Math.min(current + step, target);
             el.textContent = current.toLocaleString();
             if (current >= target) clearInterval(timer);
@@ -155,15 +155,15 @@ document.addEventListener('DOMContentLoaded', async () => {
      PORTFOLIO DATA + RENDERING
   ══════════════════════════════════════════ */
   const fallbackPortfolio = [
-    { brand: 'Infinix',      title: 'Product Launch Campaign', category: 'brand',       type: 'Brand Film', logo: 'assets/infinix.jpeg', href: '/work' },
-    { brand: 'GoodScore',   title: 'Financial Wellbeing Ad',  category: 'performance', type: 'Performance', logo: 'assets/goodscore.jpeg', href: '/work' },
-    { brand: 'Seekho',      title: 'Learning Platform Reel',  category: 'performance', type: 'Performance', logo: 'assets/seekho.jpeg', href: '/work' },
-    { brand: 'Brands.live', title: 'Creator Economy Film',    category: 'brand',       type: 'Brand Film', logo: 'assets/brands-live.jpeg', href: '/work' },
-    { brand: 'GoCredit',    title: 'Credit Score Micro-Drama',category: 'micro-drama', type: 'Micro-Drama', logo: 'assets/gocredit.jpeg', href: '/work' },
-    { brand: 'Vyapar',      title: 'SME Storytelling Series', category: 'social',      type: 'Social', logo: 'assets/vyapar.jpeg', href: '/work' },
-    { brand: 'Bansal Group',title: 'Brand Identity Film',     category: 'brand',       type: 'Brand Film', logo: 'assets/bansal-group.jpeg', href: '/work' },
-    { brand: 'FatakPay',    title: 'BNPL Awareness Campaign', category: 'performance', type: 'Performance', logo: 'assets/fatakpay.jpeg', href: '/work' },
-    { brand: 'Bachatt',     title: 'Social Media Content',    category: 'social',      type: 'Social', logo: 'assets/bachatt.jpeg', href: '/work' },
+    { brand: 'Infinix', title: 'Product Launch Campaign', category: 'brand', type: 'Brand Film', logo: 'assets/infinix.jpeg', href: '/work' },
+    { brand: 'GoodScore', title: 'Financial Wellbeing Ad', category: 'performance', type: 'Performance', logo: 'assets/goodscore.jpeg', href: '/work' },
+    { brand: 'Seekho', title: 'Learning Platform Reel', category: 'performance', type: 'Performance', logo: 'assets/seekho.jpeg', href: '/work' },
+    { brand: 'Brands.live', title: 'Creator Economy Film', category: 'brand', type: 'Brand Film', logo: 'assets/brands-live.jpeg', href: '/work' },
+    { brand: 'GoCredit', title: 'Credit Score Micro-Drama', category: 'micro-drama', type: 'Micro-Drama', logo: 'assets/gocredit.jpeg', href: '/work' },
+    { brand: 'Vyapar', title: 'SME Storytelling Series', category: 'social', type: 'Social', logo: 'assets/vyapar.jpeg', href: '/work' },
+    { brand: 'Bansal Group', title: 'Brand Identity Film', category: 'brand', type: 'Brand Film', logo: 'assets/bansal-group.jpeg', href: '/work' },
+    { brand: 'FatakPay', title: 'BNPL Awareness Campaign', category: 'performance', type: 'Performance', logo: 'assets/fatakpay.jpeg', href: '/work' },
+    { brand: 'Bachatt', title: 'Social Media Content', category: 'social', type: 'Social', logo: 'assets/bachatt.jpeg', href: '/work' },
   ];
 
   const portfolioData = await fetchApiData('/projects', fallbackPortfolio);
@@ -198,7 +198,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="portfolio-card-desc">View work →</div>
         </div>
       </a>
-    `;}).join('');
+    `;
+    }).join('');
     portfolioGrid.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
   }
   renderPortfolio();
@@ -215,21 +216,21 @@ document.addEventListener('DOMContentLoaded', async () => {
      REELS DATA + MINIMAL AUTO-SLIDING
   ══════════════════════════════════════════ */
   const fallbackReels = [
-    { brand: 'Infinix',      title: 'Product Launch Campaign', category: 'Brand Film', logo: 'assets/infinix.jpeg' },
-    { brand: 'GoodScore',    title: 'Financial Wellbeing Reel', category: 'Performance', logo: 'assets/goodscore.jpeg' },
-    { brand: 'Seekho',       title: 'Learning Platform Reel', category: 'Social Ad', logo: 'assets/seekho.jpeg' },
-    { brand: 'Brands.live',  title: 'Creator Economy Film', category: 'Creative', logo: 'assets/brands-live.jpeg' },
-    { brand: 'GoCredit',     title: 'Credit Score Campaign', category: 'Micro-Drama', logo: 'assets/gocredit.jpeg' },
-    { brand: 'Vyapar',       title: 'SME Business Story', category: 'Storytelling', logo: 'assets/vyapar.jpeg' },
+    { brand: 'Infinix', title: 'Product Launch Campaign', category: 'Brand Film', logo: 'assets/infinix.jpeg' },
+    { brand: 'GoodScore', title: 'Financial Wellbeing Reel', category: 'Performance', logo: 'assets/goodscore.jpeg' },
+    { brand: 'Seekho', title: 'Learning Platform Reel', category: 'Social Ad', logo: 'assets/seekho.jpeg' },
+    { brand: 'Brands.live', title: 'Creator Economy Film', category: 'Creative', logo: 'assets/brands-live.jpeg' },
+    { brand: 'GoCredit', title: 'Credit Score Campaign', category: 'Micro-Drama', logo: 'assets/gocredit.jpeg' },
+    { brand: 'Vyapar', title: 'SME Business Story', category: 'Storytelling', logo: 'assets/vyapar.jpeg' },
     { brand: 'Bansal Group', title: 'Brand Identity Reel', category: 'Brand Film', logo: 'assets/bansal-group.jpeg' },
-    { brand: 'FatakPay',     title: 'BNPL Awareness Series', category: 'FinTech', logo: 'assets/fatakpay.jpeg' },
-    { brand: 'Bachatt',      title: 'Social Content Showcase', category: 'Social', logo: 'assets/bachatt.jpeg' },
+    { brand: 'FatakPay', title: 'BNPL Awareness Series', category: 'FinTech', logo: 'assets/fatakpay.jpeg' },
+    { brand: 'Bachatt', title: 'Social Content Showcase', category: 'Social', logo: 'assets/bachatt.jpeg' },
   ];
 
   const reelsData = await fetchApiData('/reels', fallbackReels);
 
   const reelVideoAssets = [
-    { brand: 'Bachata', slug: 'bachata', title: 'Social Campaign', category: 'Social', logo: 'assets/bachatt.jpeg' },
+    { brand: 'Bachatt', slug: 'bachatt', title: 'Social Campaign', category: 'Social', logo: 'assets/bachatt.jpeg' },
     { brand: 'Brands.live', slug: 'brand-live', title: 'Creator Economy Film', category: 'Creative', logo: 'assets/brands-live.jpeg' },
     { brand: 'Dainik Bhaskar', slug: 'dainik-bhaskar', title: 'Brand Story', category: 'Brand Film', logo: 'assets/IMG_2403.PNG' },
     { brand: 'FatakPay', slug: 'fatak-pay', title: 'Awareness Campaign', category: 'Performance', logo: 'assets/fatakpay.jpeg' },
@@ -238,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     { brand: 'HabitGold', slug: 'habit-gold', title: 'Social Campaign', category: 'Social', logo: 'assets/WhatsApp Image 2026-10-13 at 11.59.18 AM.jpeg' },
     { brand: 'Jar', slug: 'jar', title: 'Brand Campaign', category: 'Performance', logo: 'assets/jar.jpeg' },
     { brand: 'Seekho', slug: 'seekho', title: 'Learning Platform Reel', category: 'Social Ad', logo: 'assets/seekho.jpeg' },
-    { brand: 'Upgrade', slug: 'upgrade', title: 'Education Campaign', category: 'Performance', logo: 'assets/IMG_2402.PNG' },
+    { brand: 'Upgrad', slug: 'upgrad', title: 'Education Campaign', category: 'Performance', logo: 'assets/IMG_2402.PNG' },
     { brand: 'Vyapar', slug: 'vyapar', title: 'SME Business Story', category: 'Storytelling', logo: 'assets/vyapar.jpeg' },
   ];
   const reelBrandKey = brand => (brand || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -271,7 +272,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </button>
       </article>
-    `;}).join('');
+    `;
+    }).join('');
   }
 
   let reelPlayerDialog = document.getElementById('reel-player-dialog');
@@ -305,7 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       if (!video.getAttribute('src')) video.src = video.dataset.src;
-      video.play().catch(() => {});
+      video.play().catch(() => { });
     });
   };
   const reelPreviewObserver = 'IntersectionObserver' in window
@@ -339,7 +341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     reelPlayerVideo.src = playButton.dataset.video;
     reelPlayerVideo.poster = playButton.dataset.poster;
     reelPlayerDialog.showModal();
-    reelPlayerVideo.play().catch(() => {});
+    reelPlayerVideo.play().catch(() => { });
   });
   document.getElementById('reel-player-close')?.addEventListener('click', closeReelPlayer);
   reelPlayerDialog?.addEventListener('click', event => {
@@ -468,12 +470,12 @@ document.addEventListener('DOMContentLoaded', async () => {
      CASE STUDIES DATA + RENDERING
   ══════════════════════════════════════════ */
   const fallbackCases = [
-    { brand: 'Infinix',      campaign: 'Product Launch Campaign',  color: '#111111', logo: 'assets/infinix.jpeg' },
-    { brand: 'GoodScore',    campaign: 'Financial Wellbeing',      color: '#0A66C2', logo: 'assets/goodscore.jpeg' },
-    { brand: 'Seekho',       campaign: 'EdTech Awareness Series',  color: '#1a1520', logo: 'assets/seekho.jpeg' },
-    { brand: 'GoCredit',     campaign: 'Credit Score Micro-Drama', color: '#1a0848', logo: 'assets/gocredit.jpeg' },
-    { brand: 'Vyapar',       campaign: 'SME Communication Film',   color: '#9b1c1c', logo: 'assets/vyapar.jpeg' },
-    { brand: 'FatakPay',     campaign: 'BNPL Awareness Campaign',  color: '#4c1d95', logo: 'assets/fatakpay.jpeg' },
+    { brand: 'Infinix', campaign: 'Product Launch Campaign', color: '#111111', logo: 'assets/infinix.jpeg' },
+    { brand: 'GoodScore', campaign: 'Financial Wellbeing', color: '#0A66C2', logo: 'assets/goodscore.jpeg' },
+    { brand: 'Seekho', campaign: 'EdTech Awareness Series', color: '#1a1520', logo: 'assets/seekho.jpeg' },
+    { brand: 'GoCredit', campaign: 'Credit Score Micro-Drama', color: '#1a0848', logo: 'assets/gocredit.jpeg' },
+    { brand: 'Vyapar', campaign: 'SME Communication Film', color: '#9b1c1c', logo: 'assets/vyapar.jpeg' },
+    { brand: 'FatakPay', campaign: 'BNPL Awareness Campaign', color: '#4c1d95', logo: 'assets/fatakpay.jpeg' },
   ];
 
   const casesData = await fetchApiData('/cases', fallbackCases);
@@ -530,7 +532,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="team-role">${t.designation || t.role || ''}</div>
         <div class="team-bio">${t.bio || ''}</div>
       </div>
-    `;}).join('');
+    `;
+    }).join('');
     teamGrid.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
   }
 
@@ -576,9 +579,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-/* ══════════════════════════════════════════
-      TESTIMONIALS DATA + RENDERING
-   ══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+        TESTIMONIALS DATA + RENDERING
+     ══════════════════════════════════════════ */
   const fallbackTestimonials = [
     {
       testimonial: 'Ourel Ads completely transformed how we communicate our product. The team understood our brand inside out and delivered creative that actually performed.',
@@ -615,7 +618,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const testimonialsData = await fetchApiData('/testimonials', fallbackTestimonials);
 
   const testiTrack = document.getElementById('testi-track');
-  const testiDots  = document.getElementById('testi-dots');
+  const testiDots = document.getElementById('testi-dots');
   let testiCurrent = 0;
   const testiVisible = window.innerWidth < 768 ? 1 : 2;
 
@@ -625,7 +628,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="testi-quote-mark">"</div>
         <div class="testi-text">${t.testimonial || t.text}</div>
         <div class="testi-author">
-          <div class="testi-avatar">${(t.company || 'Ourel').slice(0,2).toUpperCase()}</div>
+          <div class="testi-avatar">${(t.company || 'Ourel').slice(0, 2).toUpperCase()}</div>
           <div>
             <div class="testi-name">${t.client_name || t.name} — ${t.company}</div>
             <div class="testi-role">${t.designation || t.role}</div>
@@ -675,14 +678,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ══════════════════════════════════════════
      CONTACT FORM — CONNECTED TO CMS BACKEND API
   ══════════════════════════════════════════ */
-  const form    = document.getElementById('contact-form');
+  const form = document.getElementById('contact-form');
   const success = document.getElementById('form-success');
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const nameInput = document.getElementById('form-name');
     const emailInput = document.getElementById('form-email');
-    const name  = nameInput.value.trim();
+    const name = nameInput.value.trim();
     const email = emailInput.value.trim();
     const errorDiv = document.getElementById('form-error');
 
@@ -757,7 +760,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ══════════════════════════════════════════ */
   if (document.body.getAttribute('data-page') === 'home') {
     const sections = document.querySelectorAll('section[id]');
-    const navLinks  = document.querySelectorAll('.nav-link');
+    const navLinks = document.querySelectorAll('.nav-link');
     const scrollSpy = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
