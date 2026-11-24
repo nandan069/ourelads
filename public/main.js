@@ -181,23 +181,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   ];
 
   const portfolioGrid = document.getElementById('portfolio-grid');
+  function isSafeHttpUrl(value) {
+    if (!value || typeof value !== 'string') return false;
+    const v = value.trim();
+    if (!v) return false;
+    try {
+      const u = new URL(v, window.location.origin);
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch { return false; }
+  }
+  function isSafeSlug(value) {
+    return typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.trim());
+  }
+  function escHtml(str) {
+    return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   function renderPortfolio(filter = 'all') {
     if (!portfolioGrid) return;
     const filtered = filter === 'all' ? portfolioData : portfolioData.filter(p => (p.category || p.category_slug) === filter);
     portfolioGrid.innerHTML = filtered.map((p, i) => {
       const clientBg = clients.find(c => (c.name || c.brand) === p.brand)?.bg_color;
+      const slug = (p.slug || '').toString().trim();
+      const internalHref = isSafeSlug(slug) ? `/work/${encodeURIComponent(slug)}` : '/work';
+      const ext = (p.project_url || p.href || '').toString().trim();
+      const externalHref = isSafeHttpUrl(ext) ? ext : '';
+      const primaryHref = externalHref || internalHref;
+      const primaryLabel = externalHref ? 'Visit Project →' : 'View Project →';
+      const primaryAttrs = externalHref ? ' target="_blank" rel="noopener noreferrer"' : '';
+      const secondaryCta = externalHref ? `<a href="${escHtml(internalHref)}" class="portfolio-card-desc" style="display:inline-block;margin-left:10px;font-size:.9em">Project details</a>` : '';
+      const imgSrc = p.logo || p.thumbnail || '';
       return `
-      <a href="${p.href || p.project_url || '/work'}" class="portfolio-card" data-category="${p.category || p.category_slug}" data-animate="fade-up" data-delay="${(i % 3) * 80}">
-        <div class="portfolio-card-thumb" style="background:${clientBg || bgColors[i % bgColors.length]}">
-          <span class="portfolio-thumb-label">${p.type || p.category || 'Case Study'}</span>
-          <img class="portfolio-logo" src="${p.logo || p.thumbnail}" alt="${p.brand || p.title} logo" />
-        </div>
+      <div class="portfolio-card" data-category="${escHtml(p.category || p.category_slug || '')}" data-animate="fade-up" data-delay="${(i % 3) * 80}">
+        <a href="${escHtml(primaryHref)}" aria-label="${escHtml(p.title || 'Project')}"${primaryAttrs} style="display:block;text-decoration:none;color:inherit">
+          <div class="portfolio-card-thumb" style="background:${clientBg || bgColors[i % bgColors.length]}">
+            <span class="portfolio-thumb-label">${escHtml(p.type || p.category || 'Case Study')}</span>
+            ${imgSrc ? `<img class="portfolio-logo" src="${escHtml(imgSrc)}" alt="${escHtml((p.brand || p.title || 'Project') + ' logo')}" />` : ''}
+          </div>
+        </a>
         <div class="portfolio-card-info">
-          <div class="portfolio-card-brand">${p.brand || 'Ourel Ads'}</div>
-          <div class="portfolio-card-title">${p.title}</div>
-          <div class="portfolio-card-desc">View work →</div>
+          <div class="portfolio-card-brand">${escHtml(p.brand || 'Ourel Ads')}</div>
+          <div class="portfolio-card-title">${escHtml(p.title || '')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px">
+            <a href="${escHtml(primaryHref)}" class="portfolio-card-desc"${primaryAttrs}>${primaryLabel}</a>
+            ${secondaryCta}
+          </div>
         </div>
-      </a>
+      </div>
     `;
     }).join('');
     portfolioGrid.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
@@ -554,21 +584,26 @@ document.addEventListener('DOMContentLoaded', async () => {
           'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
           'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)'
         ];
+        const escapeAttr = (str) => String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const escapeText = (str) => String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         blogGrid.innerHTML = posts.map((post, idx) => {
           const bg = catColors[idx % catColors.length];
           const dateStr = post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
           const author = post.author || 'Ourel Ads';
-          const excerpt = post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').slice(0, 140) + '...' : '');
+          const excerpt = post.excerpt || (post.content ? String(post.content).replace(/<[^>]*>/g, '').slice(0, 140) + '...' : '');
+          const hasSlug = post.slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(String(post.slug));
+          const href = hasSlug ? `/blog/${encodeURIComponent(post.slug)}` : '/blog';
+          const featuredBg = post.featured_image ? `background-image:url('${escapeAttr(post.featured_image)}');background-size:cover;background-position:center;` : '';
           return `
             <article class="blog-card" style="--card-bg: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);">
-              <div class="blog-card-image" style="background: ${bg}; ${post.featured_image ? `background-image:url('${post.featured_image}');background-size:cover;background-position:center;` : ''}">
-                <span class="blog-category">${post.category_name || post.tags || 'Insights'}</span>
+              <div class="blog-card-image" style="background: ${bg}; ${featuredBg}">
+                <span class="blog-category">${escapeText(post.category_name || post.tags || 'Insights')}</span>
               </div>
               <div class="blog-card-content">
-                <div class="blog-meta">${dateStr} · By ${author}</div>
-                <h3>${post.title}</h3>
-                <p>${excerpt}</p>
-                <a href="/contact" class="blog-read-more">Learn More <span aria-hidden="true">→</span></a>
+                <div class="blog-meta">${escapeText(dateStr)} · By ${escapeText(author)}</div>
+                <h3>${escapeText(post.title || 'Article')}</h3>
+                <p>${escapeText(excerpt)}</p>
+                <a href="${href}" class="blog-read-more">Read Article <span aria-hidden="true">→</span></a>
               </div>
             </article>
           `;
@@ -676,85 +711,263 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, 5000);
 
   /* ══════════════════════════════════════════
-     CONTACT FORM — CONNECTED TO CMS BACKEND API
+     CONTACT FORM — IDEMPOTENCY + CONFIRMED THANK-YOU (3.7C-2)
   ══════════════════════════════════════════ */
   const form = document.getElementById('contact-form');
   const success = document.getElementById('form-success');
 
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  if (form) (function initContactForm() {
+    const submit = document.getElementById('form-submit');
     const nameInput = document.getElementById('form-name');
     const emailInput = document.getElementById('form-email');
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
+    const companyInput = document.getElementById('form-company');
+    const phoneInput = document.getElementById('form-phone');
+    const serviceInput = document.getElementById('form-need');
+    const budgetInput = document.getElementById('form-budget');
+    const messageInput = document.getElementById('form-message');
+    const websiteInput = document.getElementById('form-website');
     const errorDiv = document.getElementById('form-error');
+    const manualEmail = document.getElementById('form-manual-email');
 
-    if (!name || !email) {
-      if (!name) nameInput.setAttribute('aria-invalid', 'true');
-      if (!email) emailInput.setAttribute('aria-invalid', 'true');
-      if (errorDiv) {
-        errorDiv.textContent = 'Please fill in your name and email.';
-        errorDiv.hidden = false;
-      }
-      return;
+    const PENDING_KEY = 'ourelads.contact.pending.v1';
+    const CONFIRM_KEY = 'ourelads.contact.confirmation.v1';
+
+    function safeSessionGet(key) {
+      try { return window.sessionStorage ? sessionStorage.getItem(key) : null; } catch (_) { return null; }
     }
-
-    nameInput.removeAttribute('aria-invalid');
-    emailInput.removeAttribute('aria-invalid');
-    if (errorDiv) errorDiv.hidden = true;
-
-    const submit = document.getElementById('form-submit');
-    const origText = submit.textContent;
-    submit.textContent = 'Sending...';
-    submit.disabled = true;
-
-    const company = document.getElementById('form-company')?.value.trim() || '';
-    const phone = document.getElementById('form-phone')?.value.trim() || '';
-    const service = document.getElementById('form-need')?.value || '';
-    const budget = document.getElementById('form-budget')?.value || '';
-    const message = document.getElementById('form-message')?.value.trim() || '';
-
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name, email, company, phone, service, budget, message,
-          source_page: window.location.pathname
-        })
+    function safeSessionSet(key, value) {
+      try { if (window.sessionStorage) sessionStorage.setItem(key, value); return true; } catch (_) {}
+      return false;
+    }
+    function safeSessionRemove(key) {
+      try { if (window.sessionStorage) sessionStorage.removeItem(key); } catch (_) {}
+    }
+    function parseJson(raw) {
+      if (!raw) return null;
+      try { return JSON.parse(raw); } catch (_) { return null; }
+    }
+    function generateIdempotencyKey() {
+      try {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+      } catch (_) {}
+      // Fallback opaque URL-safe key (best-effort) if randomUUID unavailable.
+      try {
+        if (window.crypto && window.crypto.getRandomValues) {
+          const bytes = new Uint8Array(16);
+          window.crypto.getRandomValues(bytes);
+          let hex = '';
+          for (let i = 0; i < bytes.length; i++) hex += ('0' + bytes[i].toString(16)).slice(-2);
+          return 'k-' + hex + '-' + Date.now().toString(36);
+        }
+      } catch (_) {}
+      return 'k-' + Math.random().toString(36).slice(2) + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+    }
+    function payloadFingerprint(p) {
+      // Deterministic client-side comparison fingerprint for attempt lifecycle only.
+      // Server remains source of truth for canonical submission fingerprint/conflict detection.
+      return JSON.stringify({
+        name: p.name || '', email: p.email || '', phone: p.phone || '', company: p.company || '',
+        service: p.service || '', budget: p.budget || '', message: p.message || '', source_page: 'contact'
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to submit form');
-      }
-
-      form.reset();
-      if (success) {
-        success.innerHTML = '<span>✓</span> Thank you! We have received your message and will be in touch shortly.';
-        success.hidden = false;
-        success.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-      setTimeout(() => { if (success) success.hidden = true; }, 6000);
-    } catch (err) {
-      console.warn('Form API submit failed, falling back to mailto:', err);
-      const subject = encodeURIComponent(`New project enquiry from ${name}`);
-      const body = encodeURIComponent(
-        `Name: ${name}\nCompany: ${company}\nEmail: ${email}\nPhone: ${phone}\nService: ${service}\nBudget: ${budget}\n\n${message}`
-      );
-      window.location.href = `mailto:info@ourelads.com?subject=${subject}&body=${body}`;
-      form.reset();
-      if (success) {
-        success.innerHTML = '<span>✓</span> Opening your email client…';
-        success.hidden = false;
-      }
-      setTimeout(() => { if (success) success.hidden = true; }, 5000);
-    } finally {
-      submit.textContent = origText;
-      submit.disabled = false;
     }
-  });
+    function clearPending() { safeSessionRemove(PENDING_KEY); }
+    function loadPending() { return parseJson(safeSessionGet(PENDING_KEY)); }
+    function savePending(state) { safeSessionSet(PENDING_KEY, JSON.stringify(state)); }
+    function clearConfirmation() { safeSessionRemove(CONFIRM_KEY); }
+    function saveConfirmation(token, expiresAt) {
+      safeSessionSet(CONFIRM_KEY, JSON.stringify({ token: token, expiresAt: expiresAt || null, confirmedAt: Date.now() }));
+      clearPending();
+    }
 
+    function getPayload() {
+      return {
+        name: (nameInput?.value || '').trim(),
+        email: (emailInput?.value || '').trim(),
+        company: (companyInput?.value || '').trim(),
+        phone: (phoneInput?.value || '').trim(),
+        service: serviceInput?.value || '',
+        budget: budgetInput?.value || '',
+        message: (messageInput?.value || '').trim(),
+        website: (websiteInput?.value || '').trim(),
+        source_page: window.location.pathname
+      };
+    }
+
+    function validateClient(p) {
+      const serviceAllowed = new Set(['', 'brand-film', 'performance', 'micro-drama', 'social', 'motion', 'digital', 'full', 'other']);
+      const budgetAllowed = new Set(['', 'under-1l', '1-5l', '5-15l', '15-50l', '50l-plus']);
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.email);
+      const phoneOk = !p.phone || /^[0-9+()\-\s.]{7,30}$/.test(p.phone);
+      const fieldErrors = {};
+      if (!p.name) fieldErrors.name = 'Name is required.';
+      else if (p.name.length > 120) fieldErrors.name = 'Name must be 120 characters or fewer.';
+      if (!p.email) fieldErrors.email = 'Email is required.';
+      else if (p.email.length > 254 || !emailOk) fieldErrors.email = 'Enter a valid email address.';
+      if (!p.message) fieldErrors.message = 'Message is required.';
+      else if (p.message.length > 5000) fieldErrors.message = 'Message must be 5000 characters or fewer.';
+      if (p.company.length > 120) fieldErrors.company = 'Company must be 120 characters or fewer.';
+      if (!phoneOk) fieldErrors.phone = 'Enter a valid phone number.';
+      if (!serviceAllowed.has(p.service)) fieldErrors.service = 'Please select a valid service option.';
+      if (!budgetAllowed.has(p.budget)) fieldErrors.budget = 'Please select a valid budget range.';
+      return fieldErrors;
+    }
+
+    const inputsByField = { name: nameInput, email: emailInput, message: messageInput, company: companyInput, phone: phoneInput, service: serviceInput, budget: budgetInput };
+
+    function clearFieldErrors() { Object.values(inputsByField).forEach((el) => el && el.removeAttribute('aria-invalid')); }
+    function applyFieldErrors(fieldErrors) {
+      if (!fieldErrors || typeof fieldErrors !== 'object') return;
+      Object.keys(fieldErrors).forEach((f) => { if (inputsByField[f]) inputsByField[f].setAttribute('aria-invalid', 'true'); });
+    }
+    function showError(msg, fieldErrors) {
+      clearFieldErrors();
+      if (fieldErrors) applyFieldErrors(fieldErrors);
+      if (errorDiv) { errorDiv.textContent = msg || 'We could not submit your message. Please try again.'; errorDiv.hidden = false; }
+      if (manualEmail) manualEmail.hidden = !msg; // show only when relevant; refined below
+      if (success) success.hidden = true;
+    }
+    function hideFeedback() {
+      if (errorDiv) { errorDiv.textContent = ''; errorDiv.hidden = true; }
+      if (manualEmail) manualEmail.hidden = true;
+      if (success) success.hidden = true;
+    }
+
+    async function submitWithLifecycle(intent) {
+      if (!submit || submit.disabled) return;
+      clearFieldErrors();
+      hideFeedback();
+
+      const payload = getPayload();
+      const fieldErrors = validateClient(payload);
+      if (Object.keys(fieldErrors).length) {
+        applyFieldErrors(fieldErrors);
+        if (errorDiv) { errorDiv.textContent = Object.values(fieldErrors).join(' '); errorDiv.hidden = false; }
+        if (manualEmail) manualEmail.hidden = true;
+        (inputsByField[Object.keys(fieldErrors)[0]] || nameInput)?.focus();
+        // validation errors are local; do not create/rotate server submission attempts
+        return;
+      }
+
+      const fp = payloadFingerprint(payload);
+      let pending = loadPending();
+      let idemKey = null;
+
+      if (intent === 'retry' && pending && pending.fingerprint === fp && pending.key && pending.outcome === 'retryable') {
+        idemKey = pending.key; // reuse same key for same-payload retry/unknown outcome
+      } else if (intent === 'new' && pending && pending.fingerprint === fp && pending.outcome === 'retryable' && pending.key) {
+        // explicit new attempt with unchanged payload while retryable: keep retryability on same key
+        idemKey = pending.key;
+      } else {
+        // payload changed, or first attempt, or prior terminal/conflict/confirmed -> new key
+        idemKey = generateIdempotencyKey();
+      }
+
+      // New attempt context: do not let a previously confirmed session token be misattributed to this submission.
+      // (Refresh-safe confirmation for the prior submission remains available until user initiates another attempt.)
+      if (!(intent === 'retry' && idemKey === (pending && pending.key))) {
+        clearConfirmation();
+      }
+
+      const attemptState = { key: idemKey, fingerprint: fp, outcome: 'inflight', updatedAt: Date.now() };
+      savePending(attemptState);
+
+      const origText = submit.textContent;
+      submit.textContent = 'Sending...';
+      submit.disabled = true;
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idemKey },
+          body: JSON.stringify(payload)
+        });
+
+        let data = {};
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          try { data = await res.json(); } catch (_) { data = {}; }
+        }
+
+        const savedTrue = data && data.saved === true && (res.status === 200 || res.status === 201);
+        if (savedTrue && data.confirmationToken) {
+          saveConfirmation(String(data.confirmationToken), data.confirmationExpiresAt || null);
+          // Navigate to confirmed thank-you page without sensitive URL params/PII.
+          try { window.location.assign('/thank-you'); } catch (_) { window.location.href = '/thank-you'; }
+          return;
+        }
+
+        // Honeypot/discard: server may return 202 for bot-like submissions. Never claim save, never issue/keep confirmation.
+        if (res.status === 202) {
+          clearPending();
+          clearConfirmation();
+          showError('We could not confirm your submission was saved. Please review your message and try again.', null);
+          if (manualEmail) manualEmail.hidden = false;
+          return;
+        }
+
+        // Other non-confirmed responses: do not claim save.
+        if (res.status === 409 || (data && data.code === 'IDEMPOTENCY_CONFLICT')) {
+          const msg = (data && data.error) ? String(data.error) : 'This submission key was already used with different data. Please start a new submission.';
+          clearPending(); // require new key on next intentional attempt
+          clearConfirmation();
+          showError(msg, null);
+          if (manualEmail) manualEmail.hidden = false;
+          return;
+        }
+
+        if (res.status === 400) {
+          const msg = (data && (data.error || data.message)) ? String(data.error || data.message) : 'Please check your details and try again.';
+          // invalid request: keep data, do not mark retryable same-key success path; new attempt will issue new key
+          if (data && data.fieldErrors && data.fieldErrors.idempotencyKey) {
+            clearPending();
+          } else {
+            // validation errors don't need same-key reuse; clear so next submit gets fresh key unless server says otherwise
+            clearPending();
+          }
+          clearConfirmation();
+          showError(msg, data && data.fieldErrors ? data.fieldErrors : null);
+          if (manualEmail) manualEmail.hidden = true;
+          return;
+        }
+
+        if (res.status === 429) {
+          savePending({ key: idemKey, fingerprint: fp, outcome: 'retryable', updatedAt: Date.now(), status: 429 });
+          showError('Too many submissions. Please wait and try again later.', null);
+          if (manualEmail) manualEmail.hidden = false;
+          return;
+        }
+
+        if (res.status >= 500) {
+          savePending({ key: idemKey, fingerprint: fp, outcome: 'retryable', updatedAt: Date.now(), status: res.status });
+          showError('Something went wrong on our side. Your message was not confirmed as saved. Please try again.', null);
+          if (manualEmail) manualEmail.hidden = false;
+          return;
+        }
+
+        // Any other unexpected response: preserve data, no confirmed-save claim.
+        savePending({ key: idemKey, fingerprint: fp, outcome: 'retryable', updatedAt: Date.now(), status: res.status });
+        const generic = (data && (data.error || data.message)) ? String(data.error || data.message) : 'We could not confirm your submission. Please try again.';
+        showError(generic, data && data.fieldErrors ? data.fieldErrors : null);
+        if (manualEmail) manualEmail.hidden = false;
+      } catch (err) {
+        // Network/unknown outcome: reuse same key for same-payload retry (idempotent recovery)
+        savePending({ key: idemKey, fingerprint: fp, outcome: 'retryable', updatedAt: Date.now(), status: 'network' });
+        showError('We could not confirm your submission due to a network issue. Your message was not confirmed as saved. Please try again.', null);
+        if (manualEmail) manualEmail.hidden = false;
+      } finally {
+        if (submit) { submit.textContent = origText; submit.disabled = false; }
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = getPayload();
+      const fp = payloadFingerprint(payload);
+      const pending = loadPending();
+      const intent = (pending && pending.fingerprint === fp && pending.outcome === 'retryable') ? 'retry' : 'new';
+      await submitWithLifecycle(intent);
+    });
+  })();
   /* ══════════════════════════════════════════
      SMOOTH ACTIVE NAV HIGHLIGHT ON SCROLL
   ══════════════════════════════════════════ */

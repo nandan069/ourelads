@@ -38,6 +38,22 @@ function adminRoutes(db) {
   });
 
   // ─── HELPER: generic CRUD factory ───
+  const PROJECT_SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  function validateProjectSlugRecord(db, { slugValue, statusValue, excludeId = null }) {
+    const slug = String(slugValue == null ? '' : slugValue).trim();
+    const status = String(statusValue == null ? '' : statusValue).trim() || 'draft';
+    if (!slug) {
+      if (status === 'published') return { error: 'Published projects must have a slug' };
+      return { slug: null };
+    }
+    if (slug.length > 200 || !PROJECT_SLUG_RE.test(slug)) {
+      return { error: 'Project slug must be lowercase kebab-case (letters, numbers, hyphens only)' };
+    }
+    const dup = db.prepare(`SELECT id FROM projects WHERE lower(slug) = lower(?)${excludeId ? ' AND id != ?' : ''} LIMIT 1`).get(...(excludeId ? [slug, excludeId] : [slug]));
+    if (dup) return { error: 'Project slug already exists. Choose a unique slug.' };
+    return { slug };
+  }
+
   function crudRoutes(entityPath, tableName, entityLabel, opts = {}) {
     // LIST
     router.get(`/${entityPath}`, (req, res) => {
@@ -103,7 +119,30 @@ function adminRoutes(db) {
           req.body.title = req.body.campaign ? `${req.body.brand ? req.body.brand + ' - ' : ''}${req.body.campaign}` : (req.body.brand ? `${req.body.brand} Case Study` : 'Case Study');
         }
         const tableCols = db.prepare(`PRAGMA table_info(${tableName})`).all().map(c => c.name).filter(c => c !== 'id');
-        if (tableCols.includes('slug') && !req.body.slug) {
+        if (tableName === 'projects') {
+          if (Object.prototype.hasOwnProperty.call(req.body, 'slug')) {
+            const v = validateProjectSlugRecord(db, { slugValue: req.body.slug, statusValue: req.body.status || 'draft' });
+            if (v.error) return res.status(400).json({ error: v.error });
+            if (v.slug !== null) req.body.slug = v.slug;
+          } else if (tableCols.includes('slug')) {
+            // auto-generate only when omitted; ensure unique and lowercase kebab-case
+            const rawSlugSource = req.body.title || req.body.name || req.body.brand || entityLabel;
+            let generatedSlug = String(rawSlugSource).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `project-${Date.now()}`;
+            let candidate = generatedSlug;
+            let tries = 0;
+            while (db.prepare('SELECT id FROM projects WHERE lower(slug)=lower(?)').get(candidate) && tries < 20) {
+              tries += 1;
+              candidate = `${generatedSlug}-${tries}`;
+            }
+            if (db.prepare('SELECT id FROM projects WHERE lower(slug)=lower(?)').get(candidate)) {
+              return res.status(400).json({ error: 'Unable to generate a unique project slug. Provide a unique slug.' });
+            }
+            req.body.slug = candidate;
+          }
+          if ((req.body.status || 'draft') === 'published' && !(req.body.slug && String(req.body.slug).trim())) {
+            return res.status(400).json({ error: 'Published projects must have a slug' });
+          }
+        } else if (tableCols.includes('slug') && !req.body.slug) {
           const rawSlugSource = req.body.title || req.body.name || req.body.campaign || entityLabel;
           let generatedSlug = String(rawSlugSource).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
           if (!generatedSlug) generatedSlug = `${entityPath}-${Date.now()}`;
@@ -135,6 +174,21 @@ function adminRoutes(db) {
 
         const tableCols = db.prepare(`PRAGMA table_info(${tableName})`).all();
         const validColNames = tableCols.map(c => c.name).filter(c => c !== 'id' && c !== 'created_at' && c !== 'updated_at');
+
+        if (tableName === 'projects') {
+          const nextStatus = Object.prototype.hasOwnProperty.call(req.body, 'status') ? req.body.status : existing.status;
+          const hasSlugField = Object.prototype.hasOwnProperty.call(req.body, 'slug');
+          const nextSlugValue = hasSlugField ? req.body.slug : existing.slug;
+          if (hasSlugField) {
+            const v = validateProjectSlugRecord(db, { slugValue: nextSlugValue, statusValue: nextStatus, excludeId: id });
+            if (v.error) return res.status(400).json({ error: v.error });
+            req.body.slug = v.slug == null ? '' : v.slug; // do not rewrite existing unless explicitly provided
+          }
+          if ((String(nextStatus || '').trim() || 'draft') === 'published') {
+            const effectiveSlug = hasSlugField ? String(req.body.slug || '').trim() : String(existing.slug || '').trim();
+            if (!effectiveSlug) return res.status(400).json({ error: 'Published projects must have a slug' });
+          }
+        }
 
         const safeEntries = Object.entries(req.body).filter(([k]) => validColNames.includes(k));
         if (!safeEntries.length) return res.status(400).json({ error: 'No valid data provided' });
@@ -232,22 +286,186 @@ function adminRoutes(db) {
   });
 
   // ─── SEO METADATA ───
+  const SUPPORTED_PAGE_SEO_SLUGS = new Set(['home', 'about', 'services', 'work', 'blog', 'testimonials', 'contact']);
+  const SUPPORTED_ROBOTS = new Set(['index, follow', 'noindex, follow', 'index, nofollow', 'noindex, nofollow']);
+  const SUPPORTED_SEO_ENTITY_TYPES = new Set(['page', 'blog_post', 'project']);
+
+  function hasControlChars(str) {
+    return /[\u0000-\u001F\u007F]/.test(str);
+  }
+
+  function normalizeSeoField(value) {
+    if (value == null) return null;
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed === '' ? null : trimmed;
+  }
+
+  function isAllowedSeoUrl(value, { allowEmpty = true } = {}) {
+    if (value == null || value === '') return !!allowEmpty;
+    if (typeof value !== 'string') return false;
+    if (hasControlChars(value)) return false;
+    const trimmed = value.trim();
+    if (!trimmed) return !!allowEmpty;
+    let parsed;
+    try { parsed = new URL(trimmed); } catch { return false; }
+    const protocol = parsed.protocol.toLowerCase();
+    if (protocol === 'https:') return true;
+    if (protocol === 'http:') {
+      // localhost HTTP exceptions only for development
+      const host = parsed.hostname.toLowerCase();
+      if (process.env.NODE_ENV !== 'production' && (host === 'localhost' || host === '127.0.0.1' || host === '::1')) return true;
+      return false;
+    }
+    return false; // rejects javascript:, data:, etc.
+  }
+
+  function parseStrictPositiveInt(raw, label) {
+    const value = String(raw ?? '').trim();
+    const id = Number.parseInt(value, 10);
+    if (!Number.isInteger(id) || id <= 0 || String(id) !== value) return { error: `Invalid ${label}` };
+    return { id };
+  }
+
+  function resolveSupportedPage(entityIdRaw) {
+    const parsed = parseStrictPositiveInt(entityIdRaw, 'page ID');
+    if (parsed.error) return { error: parsed.error };
+    const page = db.prepare('SELECT id, slug, title, status FROM pages WHERE id = ?').get(parsed.id);
+    if (!page) return { error: 'Page not found' };
+    if (!SUPPORTED_PAGE_SEO_SLUGS.has(page.slug)) return { error: 'Page is not supported for per-page SEO' };
+    if (page.status !== 'published') return { error: 'Only published pages can be edited for SEO' };
+    return { id: parsed.id, entity: page, entityType: 'page', logLabel: `page ${page.slug}` };
+  }
+
+  function resolveSupportedBlogPost(entityIdRaw) {
+    const parsed = parseStrictPositiveInt(entityIdRaw, 'blog post ID');
+    if (parsed.error) return { error: parsed.error };
+    const post = db.prepare('SELECT id, slug, title, status FROM blog_posts WHERE id = ?').get(parsed.id);
+    if (!post) return { error: 'Blog post not found' };
+    if (post.status !== 'published') return { error: 'Only published blog posts can be edited for SEO' };
+    return { id: parsed.id, entity: post, entityType: 'blog_post', logLabel: `blog_post ${post.slug}` };
+  }
+
+  function resolveSupportedProject(entityIdRaw) {
+    const parsed = parseStrictPositiveInt(entityIdRaw, 'project ID');
+    if (parsed.error) return { error: parsed.error };
+    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(parsed.id);
+    if (!project) return { error: 'Project not found' };
+    if (project.status !== 'published') return { error: 'Only published projects can be edited for SEO' };
+    return { id: parsed.id, entity: project, entityType: 'project', logLabel: `project ${project.slug || project.id}` };
+  }
+
+  function resolveSeoEntity(type, entityId) {
+    if (type === 'page') return resolveSupportedPage(entityId);
+    if (type === 'blog_post') return resolveSupportedBlogPost(entityId);
+    if (type === 'project') return resolveSupportedProject(entityId);
+    return { error: 'Unsupported entity type' };
+  }
+
+  function validateSeoPayload(body) {
+    const seo_title = normalizeSeoField(body.seo_title);
+    const meta_description = normalizeSeoField(body.meta_description);
+    const canonical_url = normalizeSeoField(body.canonical_url);
+    const og_title = normalizeSeoField(body.og_title);
+    const og_description = normalizeSeoField(body.og_description);
+    const og_image = normalizeSeoField(body.og_image);
+    const robots = normalizeSeoField(body.robots) || 'index, follow';
+
+    if (seo_title && (seo_title.length > 120 || hasControlChars(seo_title))) return { error: 'SEO title is invalid or too long (max 120 characters)' };
+    if (meta_description && (meta_description.length > 320 || hasControlChars(meta_description))) return { error: 'Meta description is invalid or too long (max 320 characters)' };
+    if (og_title && (og_title.length > 120 || hasControlChars(og_title))) return { error: 'Open Graph title is invalid or too long (max 120 characters)' };
+    if (og_description && (og_description.length > 320 || hasControlChars(og_description))) return { error: 'Open Graph description is invalid or too long (max 320 characters)' };
+    if (!isAllowedSeoUrl(canonical_url, { allowEmpty: true })) return { error: 'Canonical URL must be a valid https:// URL (or blank to use default)' };
+    if (!isAllowedSeoUrl(og_image, { allowEmpty: true })) return { error: 'Open Graph image URL must be a valid https:// URL' };
+    if (!SUPPORTED_ROBOTS.has(robots)) return { error: 'Unsupported robots directive' };
+
+    return { seo_title, meta_description, canonical_url, og_title, og_description, og_image, robots };
+  }
+
   router.get('/seo/:type/:entityId', (req, res) => {
-    const row = db.prepare('SELECT * FROM seo_metadata WHERE entity_type = ? AND entity_id = ?').get(req.params.type, req.params.entityId);
-    res.json(row || {});
+    try {
+      const { type, entityId } = req.params;
+      if (!SUPPORTED_SEO_ENTITY_TYPES.has(type)) return res.status(400).json({ error: 'Unsupported entity type' });
+      const resolved = resolveSeoEntity(type, entityId);
+      if (resolved.error) return res.status(400).json({ error: resolved.error });
+      const row = db.prepare('SELECT * FROM seo_metadata WHERE entity_type = ? AND entity_id = ?').get(type, resolved.id) || {};
+      if (type === 'project') {
+        const { hasMeaningfulProjectContent } = require('../utils/seoRenderer');
+        const isMeaningful = !!hasMeaningfulProjectContent(resolved.entity);
+        row._entity = {
+          id: resolved.entity.id,
+          slug: resolved.entity.slug || '',
+          title: resolved.entity.title || '',
+          brand: resolved.entity.brand || '',
+          status: resolved.entity.status,
+          publicUrl: `/work/${resolved.entity.slug || ''}`,
+          isMeaningful,
+          isThin: !isMeaningful,
+          inheritedRobots: isMeaningful ? 'index, follow' : 'noindex, follow',
+        };
+      }
+      return res.json(row);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
-  router.put('/seo/:type/:entityId', (req, res) => {
-    const { seo_title, meta_description, keywords, canonical_url, og_title, og_description, og_image, robots, schema_markup } = req.body;
-    const existing = db.prepare('SELECT id FROM seo_metadata WHERE entity_type = ? AND entity_id = ?').get(req.params.type, req.params.entityId);
-    if (existing) {
-      db.prepare('UPDATE seo_metadata SET seo_title=?, meta_description=?, keywords=?, canonical_url=?, og_title=?, og_description=?, og_image=?, robots=?, schema_markup=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
-        .run(seo_title, meta_description, keywords, canonical_url, og_title, og_description, og_image, robots, schema_markup, existing.id);
-    } else {
-      db.prepare('INSERT INTO seo_metadata (entity_type, entity_id, seo_title, meta_description, keywords, canonical_url, og_title, og_description, og_image, robots, schema_markup) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-        .run(req.params.type, req.params.entityId, seo_title, meta_description, keywords, canonical_url, og_title, og_description, og_image, robots, schema_markup);
+  router.put('/seo/:type/:entityId', requireRole('super_admin', 'admin'), (req, res) => {
+    try {
+      const { type, entityId } = req.params;
+      if (!SUPPORTED_SEO_ENTITY_TYPES.has(type)) return res.status(400).json({ error: 'Unsupported entity type' });
+      const resolved = resolveSeoEntity(type, entityId);
+      if (resolved.error) return res.status(400).json({ error: resolved.error });
+
+      const body = req.body && typeof req.body === 'object' ? req.body : {};
+      const validated = validateSeoPayload(body);
+      if (validated.error) return res.status(400).json({ error: validated.error });
+      const { seo_title, meta_description, canonical_url, og_title, og_description, og_image, robots } = validated;
+
+      // keywords/schema_markup not editable in this phase; preserve existing values if present
+      const existing = db.prepare('SELECT id, keywords, schema_markup FROM seo_metadata WHERE entity_type = ? AND entity_id = ?').get(type, resolved.id);
+      const keywords = existing ? (existing.keywords ?? null) : null;
+      const schema_markup = existing ? (existing.schema_markup ?? null) : null;
+
+      // Keep only meaningful overrides; all-empty => remove override to restore renderer fallbacks
+      const hasAnyOverride = [seo_title, meta_description, canonical_url, og_title, og_description, og_image].some(v => v != null) || robots !== 'index, follow' || (keywords != null && String(keywords).trim() !== '') || (schema_markup != null && String(schema_markup).trim() !== '');
+
+      if (existing) {
+        if (!hasAnyOverride) {
+          db.prepare('DELETE FROM seo_metadata WHERE id = ?').run(existing.id);
+          logActivity(db, req.user.id, 'deleted', 'seo_metadata', existing.id, `Removed SEO override for ${resolved.logLabel}`, req.ip);
+          return res.json({ message: 'SEO override removed; defaults restored' });
+        }
+        db.prepare('UPDATE seo_metadata SET seo_title=?, meta_description=?, keywords=?, canonical_url=?, og_title=?, og_description=?, og_image=?, robots=?, schema_markup=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
+          .run(seo_title, meta_description, keywords, canonical_url, og_title, og_description, og_image, robots, schema_markup, existing.id);
+      } else {
+        if (!hasAnyOverride) {
+          return res.json({ message: 'No SEO overrides to save; defaults in use' });
+        }
+        db.prepare('INSERT INTO seo_metadata (entity_type, entity_id, seo_title, meta_description, keywords, canonical_url, og_title, og_description, og_image, robots, schema_markup) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+          .run(type, resolved.id, seo_title, meta_description, keywords, canonical_url, og_title, og_description, og_image, robots, schema_markup);
+      }
+      logActivity(db, req.user.id, 'updated', 'seo_metadata', resolved.id, `Updated SEO for ${resolved.logLabel}`, req.ip);
+      res.json({ message: 'SEO updated' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-    res.json({ message: 'SEO updated' });
+  });
+
+  router.delete('/seo/:type/:entityId', requireRole('super_admin', 'admin'), (req, res) => {
+    try {
+      const { type, entityId } = req.params;
+      if (!SUPPORTED_SEO_ENTITY_TYPES.has(type)) return res.status(400).json({ error: 'Unsupported entity type' });
+      const resolved = resolveSeoEntity(type, entityId);
+      if (resolved.error) return res.status(400).json({ error: resolved.error });
+      const result = db.prepare('DELETE FROM seo_metadata WHERE entity_type = ? AND entity_id = ?').run(type, resolved.id);
+      if (result.changes > 0) {
+        logActivity(db, req.user.id, 'deleted', 'seo_metadata', resolved.id, `Restored default SEO for ${resolved.logLabel}`, req.ip);
+      }
+      res.json({ message: 'SEO defaults restored' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // ─── CONTACT SUBMISSIONS / LEADS ───
@@ -291,10 +509,31 @@ function adminRoutes(db) {
   router.get('/leads-export', requireRole('super_admin', 'admin'), (req, res) => {
     const rows = db.prepare('SELECT * FROM contact_submissions ORDER BY created_at DESC').all();
     const headers = ['ID', 'Name', 'Email', 'Phone', 'Company', 'Service', 'Budget', 'Message', 'Status', 'Created'];
-    const csv = [headers.join(','), ...rows.map(r => [r.id, `"${r.name}"`, r.email, r.phone, `"${r.company || ''}"`, `"${r.service || ''}"`, r.budget, `"${(r.message || '').replace(/"/g, '""')}"`, r.status, r.created_at].join(','))].join('\n');
-    res.setHeader('Content-Type', 'text/csv');
+    const sanitizeCsvCell = (value) => {
+      let s = value == null ? '' : String(value);
+      // Prevent spreadsheet formula injection when opened in Excel/Sheets
+      if (/^[\t\r\n ]*[=+\-@]/.test(s)) s = "'" + s;
+      return s.replace(/"/g, '""');
+    };
+    const csvEscape = (value) => `"${sanitizeCsvCell(value)}"`;
+    const csv = [
+      headers.join(','),
+      ...rows.map(r => [
+        r.id,
+        csvEscape(r.name),
+        csvEscape(r.email),
+        csvEscape(r.phone),
+        csvEscape(r.company || ''),
+        csvEscape(r.service || ''),
+        csvEscape(r.budget),
+        csvEscape(r.message || ''),
+        csvEscape(r.status),
+        csvEscape(r.created_at)
+      ].join(','))
+    ].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
-    res.send(csv);
+    res.send('\uFEFF' + csv);
   });
 
   // ─── FORM SUBMISSIONS ───

@@ -27,11 +27,15 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-page="testimonials">
-  <div id="site-header"></div>
+  <!-- GTM noscript intentionally omitted: optional tracking must not load without an approved JS-disabled consent mechanism (3.7D-2B). -->
+<div id="site-header"></div>
   <main id="main-content">
   <section class="page-hero">
     <div class="page-hero-bg">
-      <img src="hero_bg.jpg" alt="" />
+      <picture>
+        <source srcset="hero_bg.webp" type="image/webp" />
+        <img src="hero_bg.jpg" alt="" width="1376" height="768" decoding="async" fetchpriority="high" />
+      </picture>
       <div class="page-hero-overlay"></div>
     </div>
     <div class="page-hero-content container">

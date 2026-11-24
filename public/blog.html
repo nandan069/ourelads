@@ -31,11 +31,15 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-page="blog">
-  <div id="site-header"></div>
+  <!-- GTM noscript intentionally omitted: optional tracking must not load without an approved JS-disabled consent mechanism (3.7D-2B). -->
+<div id="site-header"></div>
   <main id="main-content">
   <section class="page-hero">
     <div class="page-hero-bg">
-      <img src="hero_bg.jpg" alt="" />
+      <picture>
+        <source srcset="hero_bg.webp" type="image/webp" />
+        <img src="hero_bg.jpg" alt="" width="1376" height="768" decoding="async" fetchpriority="high" />
+      </picture>
       <div class="page-hero-overlay"></div>
     </div>
     <div class="page-hero-content container">
@@ -66,7 +70,7 @@
             <div class="blog-meta">Oct 1, 2026 · 8 min read</div>
             <h3>The Future of Performance Video</h3>
             <p>Discover how short-form video is dominating performance marketing and what brands need to do to stay ahead in 2026.</p>
-            <a href="#" class="blog-read-more">Read Article <span aria-hidden="true">→</span></a>
+            <a href="/blog/future-performance-video" class="blog-read-more">Read Article <span aria-hidden="true">→</span></a>
           </div>
         </article>
 
@@ -79,7 +83,7 @@
             <div class="blog-meta">Sep 15, 2026 · 6 min read</div>
             <h3>Why Storytelling Trumps High Production Budgets</h3>
             <p>We break down some of our most successful campaigns to show why a strong narrative will always beat expensive gear.</p>
-            <a href="#" class="blog-read-more">Read Article <span aria-hidden="true">→</span></a>
+            <a href="/blog/storytelling-trumps-budgets" class="blog-read-more">Read Article <span aria-hidden="true">→</span></a>
           </div>
         </article>
 
@@ -92,7 +96,7 @@
             <div class="blog-meta">Sep 2, 2026 · 10 min read</div>
             <h3>Behind the Scenes: Our Latest Brand Film</h3>
             <p>Take a look at what goes on behind the camera during a three-day ad shoot in New Delhi for a global brand.</p>
-            <a href="#" class="blog-read-more">Read Article <span aria-hidden="true">→</span></a>
+            <a href="/blog/behind-scenes-brand-film" class="blog-read-more">Read Article <span aria-hidden="true">→</span></a>
           </div>
         </article>
 

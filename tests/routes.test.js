@@ -15,7 +15,7 @@ function createTestApp() {
   const db = new Database(':memory:');
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
-  initDatabase(db);
+  initDatabase(db, { allowContactIdempotencySchema: true });
   seedDatabase(db);
 
   const app = express();
@@ -214,7 +214,10 @@ describe('Contact Form', () => {
       .post('/api/contact')
       .send({ name: 'Test' });
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Name, email, and message are required');
+    expect(res.body.error).toBeDefined();
+    expect(res.body.fieldErrors).toBeDefined();
+    expect(res.body.fieldErrors.email).toBeDefined();
+    expect(res.body.fieldErrors.message).toBeDefined();
   });
 
   test('POST /api/contact with invalid email returns 400', async () => {
@@ -226,7 +229,8 @@ describe('Contact Form', () => {
         message: 'Test message',
       });
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('Invalid email address');
+    expect(res.body.fieldErrors).toBeDefined();
+    expect(res.body.fieldErrors.email).toMatch(/valid email/i);
   });
 });
 
@@ -368,7 +372,7 @@ describe('Database', () => {
     db = new Database(':memory:');
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
-    initDatabase(db);
+    initDatabase(db, { allowContactIdempotencySchema: true });
     seedDatabase(db);
   });
 

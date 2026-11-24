@@ -17,11 +17,15 @@
 </head>
 
 <body data-page="services">
-  <div id="site-header"></div>
+  <!-- GTM noscript intentionally omitted: optional tracking must not load without an approved JS-disabled consent mechanism (3.7D-2B). -->
+<div id="site-header"></div>
   <main id="main-content">
     <section class="page-hero">
       <div class="page-hero-bg">
-        <img src="hero_bg.jpg" alt="" />
+        <picture>
+          <source srcset="hero_bg.webp" type="image/webp" />
+          <img src="hero_bg.jpg" alt="" width="1376" height="768" decoding="async" fetchpriority="high" />
+        </picture>
         <div class="page-hero-overlay"></div>
       </div>
       <div class="page-hero-content container" style="text-align: center; max-width: 860px; margin: 0 auto;">
@@ -59,11 +63,22 @@
           <button class="service-filter-btn" data-filter="production">Production &amp; Motion</button>
         </div>
 
+        <nav class="services-jump-nav" aria-label="Jump to service" data-animate="fade-up">
+          <a class="services-jump-link" href="#service-performance-marketing-videos">Performance Marketing Videos</a>
+          <a class="services-jump-link" href="#service-brand-films-tvcs">Brand Films &amp; TVCs</a>
+          <a class="services-jump-link" href="#service-micro-dramas-storytelling">Micro-Dramas &amp; Storytelling</a>
+          <a class="services-jump-link" href="#service-creative-production">Creative Production</a>
+          <a class="services-jump-link" href="#service-content-marketing">Content Marketing</a>
+          <a class="services-jump-link" href="#service-digital-marketing">Digital Marketing</a>
+          <a class="services-jump-link" href="#service-social-media-content">Social Media Content</a>
+          <a class="services-jump-link" href="#service-motion-graphics">Motion Graphics &amp; Visual GFX</a>
+        </nav>
+
         <!-- Cards Grid -->
         <div class="services-cards-grid" id="services-cards-container">
           
           <!-- Card 01 -->
-          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+          <div class="service-card-pro" id="service-performance-marketing-videos" data-category="performance" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">01 · PERFORMANCE</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -89,7 +104,7 @@
           </div>
 
           <!-- Card 02 -->
-          <div class="service-card-pro" data-category="film" data-animate="fade-up">
+          <div class="service-card-pro" id="service-brand-films-tvcs" data-category="film" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">02 · BRAND FILMS</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -120,7 +135,7 @@
           </div>
 
           <!-- Card 03 -->
-          <div class="service-card-pro" data-category="film" data-animate="fade-up">
+          <div class="service-card-pro" id="service-micro-dramas-storytelling" data-category="film" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">03 · STORYTELLING</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -145,7 +160,7 @@
           </div>
 
           <!-- Card 04 -->
-          <div class="service-card-pro" data-category="production" data-animate="fade-up">
+          <div class="service-card-pro" id="service-creative-production" data-category="production" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">04 · PRODUCTION</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -170,7 +185,7 @@
           </div>
 
           <!-- Card 05 -->
-          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+          <div class="service-card-pro" id="service-content-marketing" data-category="performance" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">05 · CONTENT</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -194,7 +209,7 @@
           </div>
 
           <!-- Card 06 -->
-          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+          <div class="service-card-pro" id="service-digital-marketing" data-category="performance" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">06 · GROWTH</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -219,7 +234,7 @@
           </div>
 
           <!-- Card 07 -->
-          <div class="service-card-pro" data-category="performance" data-animate="fade-up">
+          <div class="service-card-pro" id="service-social-media-content" data-category="performance" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">07 · SOCIAL</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -245,7 +260,7 @@
           </div>
 
           <!-- Card 08 -->
-          <div class="service-card-pro" data-category="production" data-animate="fade-up">
+          <div class="service-card-pro" id="service-motion-graphics" data-category="production" data-animate="fade-up">
             <div class="service-card-pro-header">
               <span class="service-card-pro-num">08 · MOTION</span>
               <div class="service-card-pro-icon" aria-hidden="true">
@@ -278,7 +293,10 @@
     <section class="page-section" id="who-we-are" style="background: var(--white); padding: var(--section-gap) 0;">
       <div class="container two-col">
         <div class="feature-img-wrap" data-animate="fade-right">
-          <img src="assets/who-we-are.jpg" alt="Ourel Ads Production Studio Team" class="feature-img" />
+          <picture>
+            <source srcset="assets/who-we-are.webp" type="image/webp" />
+            <img src="assets/who-we-are.jpg" alt="Ourel Ads Production Studio Team" class="feature-img" width="1376" height="768" loading="lazy" decoding="async" />
+          </picture>
           <div class="feature-img-badge">
             <span class="badge-dot"></span>
             <span>In-House Cinema Gear &amp; Creative Directors</span>
@@ -360,7 +378,10 @@
           </div>
         </div>
         <div class="feature-img-wrap" data-animate="fade-left">
-          <img src="assets/why-choose.jpg" alt="Ourel Ads Precision Post-Production Suite" class="feature-img" />
+          <picture>
+            <source srcset="assets/why-choose.webp" type="image/webp" />
+            <img src="assets/why-choose.jpg" alt="Ourel Ads Precision Post-Production Suite" class="feature-img" width="1376" height="768" loading="lazy" decoding="async" />
+          </picture>
           <div class="feature-img-badge">
             <span class="badge-dot"></span>
             <span>Precision 4K Editing &amp; Master Sound Suite</span>

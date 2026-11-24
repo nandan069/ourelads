@@ -45,18 +45,23 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&display=swap"
     rel="stylesheet" />
   <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="preload" as="image" href="hero_bg.webp" type="image/webp" fetchpriority="high" />
   <link rel="stylesheet" href="style.css?v=20261022-reels-all2" />
 </head>
 
 <body data-page="home">
-  <div id="site-header"></div>
+  <!-- GTM noscript intentionally omitted: optional tracking must not load without an approved JS-disabled consent mechanism (3.7D-2B). -->
+<div id="site-header"></div>
   <main id="main-content">
 
     <!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
     <section class="hero" id="home">
       <div class="hero-grain"></div>
       <div class="hero-bg">
-        <img src="hero_bg.jpg" alt="Ourel Ads production studio" class="hero-img" />
+        <picture>
+          <source srcset="hero_bg.webp" type="image/webp" />
+          <img src="hero_bg.jpg" alt="Ourel Ads production studio" class="hero-img" width="1376" height="768" decoding="async" fetchpriority="high" />
+        </picture>
         <div class="hero-overlay"></div>
       </div>
       <div class="hero-content container">
@@ -257,7 +262,10 @@
         <div class="about-right" data-animate="fade-left">
           <div class="about-image-grid">
             <div class="about-img-main">
-              <img src="assets/who-we-are.jpg" alt="Ourel Ads team at work" class="about-img" />
+              <picture>
+                <source srcset="assets/who-we-are.webp" type="image/webp" />
+                <img src="assets/who-we-are.jpg" alt="Ourel Ads team at work" class="about-img" width="1376" height="768" loading="lazy" decoding="async" />
+              </picture>
               <div class="about-img-badge">
                 <span class="badge-dot"></span>
                 In-House Cinema Gear & Creative Directors
@@ -265,10 +273,16 @@
             </div>
             <div class="about-img-support">
               <div class="about-img-card">
-                <img src="assets/why-choose.jpg" alt="Creative production studio" class="about-img" />
+                <picture>
+                  <source srcset="assets/why-choose.webp" type="image/webp" />
+                  <img src="assets/why-choose.jpg" alt="Creative production studio" class="about-img" width="1376" height="768" loading="lazy" decoding="async" />
+                </picture>
               </div>
               <div class="about-img-card">
-                <img src="assets/img1.jpeg" alt="Team collaboration" class="about-img" />
+                <picture>
+                  <source srcset="assets/img1.webp" type="image/webp" />
+                  <img src="assets/img1.jpeg" alt="Team collaboration" class="about-img" width="2752" height="1536" loading="lazy" decoding="async" />
+                </picture>
               </div>
             </div>
           </div>
@@ -325,7 +339,7 @@
         </div>
 
         <div class="services-featured" data-animate="fade-up" data-delay="100">
-          <a href="/services" class="services-featured-card">
+          <a href="/services#service-performance-marketing-videos" class="services-featured-card">
             <div class="sf-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
@@ -339,7 +353,7 @@
               <span class="sf-link">Explore →</span>
             </div>
           </a>
-          <a href="/services" class="services-featured-card">
+          <a href="/services#service-brand-films-tvcs" class="services-featured-card">
             <div class="sf-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -356,7 +370,7 @@
         </div>
 
         <div class="services-mini-grid" data-animate="fade-up" data-delay="200">
-          <a href="/services" class="services-mini-card">
+          <a href="/services#service-micro-dramas-storytelling" class="services-mini-card">
             <span class="sm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
@@ -365,7 +379,7 @@
             </span>
             <span class="sm-title">Micro-Dramas & Storytelling</span>
           </a>
-          <a href="/services" class="services-mini-card">
+          <a href="/services#service-creative-production" class="services-mini-card">
             <span class="sm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z" />
@@ -374,7 +388,7 @@
             </span>
             <span class="sm-title">Creative Production</span>
           </a>
-          <a href="/services" class="services-mini-card">
+          <a href="/services#service-content-marketing" class="services-mini-card">
             <span class="sm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -386,7 +400,7 @@
             </span>
             <span class="sm-title">Content Marketing</span>
           </a>
-          <a href="/services" class="services-mini-card">
+          <a href="/services#service-digital-marketing" class="services-mini-card">
             <span class="sm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="12" cy="12" r="10" />
@@ -396,7 +410,7 @@
             </span>
             <span class="sm-title">Digital Marketing</span>
           </a>
-          <a href="/services" class="services-mini-card">
+          <a href="/services#service-social-media-content" class="services-mini-card">
             <span class="sm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M21 2H3v16h5v4l4-4h4l5-5V2zM11 11V7M16 11V7" />
@@ -404,7 +418,7 @@
             </span>
             <span class="sm-title">Social Media Content</span>
           </a>
-          <a href="/services" class="services-mini-card">
+          <a href="/services#service-motion-graphics" class="services-mini-card">
             <span class="sm-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <polygon points="5 3 19 12 5 21 5 3" />

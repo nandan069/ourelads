@@ -12,11 +12,15 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-page="contact">
-  <div id="site-header"></div>
+  <!-- GTM noscript intentionally omitted: optional tracking must not load without an approved JS-disabled consent mechanism (3.7D-2B). -->
+<div id="site-header"></div>
   <main id="main-content">
   <section class="page-hero">
     <div class="page-hero-bg">
-      <img src="hero_bg.jpg" alt="" />
+      <picture>
+        <source srcset="hero_bg.webp" type="image/webp" />
+        <img src="hero_bg.jpg" alt="" width="1376" height="768" decoding="async" fetchpriority="high" />
+      </picture>
       <div class="page-hero-overlay"></div>
     </div>
     <div class="page-hero-content container">
@@ -75,49 +79,56 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group">
-              <label for="form-email">Email *</label>
-              <input type="email" id="form-email" name="email" placeholder="your@email.com" required aria-required="true" />
-            </div>
-            <div class="form-group">
-              <label for="form-phone">Phone</label>
-              <input type="tel" id="form-phone" name="phone" placeholder="+91 00000 00000" />
-            </div>
+          <div class="form-group">
+            <label for="form-email">Email *</label>
+            <input type="email" id="form-email" name="email" placeholder="your@email.com" required aria-required="true" />
           </div>
           <div class="form-group">
-            <label for="form-need">What do you need?</label>
-            <select id="form-need" name="need">
-              <option value="">Select a service</option>
-              <option value="brand-film">Brand Film / TVC</option>
-              <option value="performance">Performance Marketing Video</option>
-              <option value="micro-drama">Micro-Drama / Storytelling</option>
-              <option value="social">Social Media Content</option>
-              <option value="motion">Motion Graphics</option>
-              <option value="digital">Digital Marketing</option>
-              <option value="full">Full Creative Production</option>
-              <option value="other">Other</option>
-            </select>
+            <label for="form-phone">Phone</label>
+            <input type="tel" id="form-phone" name="phone" placeholder="+91 00000 00000" />
           </div>
-          <div class="form-group">
-            <label for="form-budget">Approximate Budget</label>
-            <select id="form-budget" name="budget">
-              <option value="">Select range</option>
-              <option value="under-1l">Under ₹1 Lakh</option>
-              <option value="1-5l">₹1 – ₹5 Lakh</option>
-              <option value="5-15l">₹5 – ₹15 Lakh</option>
-              <option value="15-50l">₹15 – ₹50 Lakh</option>
-              <option value="50l-plus">₹50 Lakh+</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="form-message">Message</label>
-            <textarea id="form-message" name="message" rows="4" placeholder="Tell us about your project..."></textarea>
-          </div>
-          <button type="submit" class="btn btn-purple btn-full" id="form-submit">START A CONVERSATION →</button>
-          <div class="form-error" id="form-error" role="alert" hidden style="color: red; margin-top: 1rem;"></div>
-          <div class="form-success" id="form-success" aria-live="polite" hidden>
-            <span>✓</span> Thank you! We have received your message and will be in touch shortly.
-          </div>
+        </div>
+        <div class="form-group">
+          <label for="form-need">What do you need?</label>
+          <select id="form-need" name="need">
+            <option value="">Select a service</option>
+            <option value="brand-film">Brand Film / TVC</option>
+            <option value="performance">Performance Marketing Video</option>
+            <option value="micro-drama">Micro-Drama / Storytelling</option>
+            <option value="social">Social Media Content</option>
+            <option value="motion">Motion Graphics</option>
+            <option value="digital">Digital Marketing</option>
+            <option value="full">Full Creative Production</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="form-budget">Approximate Budget</label>
+          <select id="form-budget" name="budget">
+            <option value="">Select range</option>
+            <option value="under-1l">Under ₹1 Lakh</option>
+            <option value="1-5l">₹1 – ₹5 Lakh</option>
+            <option value="5-15l">₹5 – ₹15 Lakh</option>
+            <option value="15-50l">₹15 – ₹50 Lakh</option>
+            <option value="50l-plus">₹50 Lakh+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="form-message">Message *</label>
+          <textarea id="form-message" name="message" rows="4" placeholder="Tell us about your project..." required aria-required="true"></textarea>
+        </div>
+        <div class="hp-field" aria-hidden="true">
+          <label for="form-website">Website</label>
+          <input type="text" id="form-website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
+        <button type="submit" class="btn btn-purple btn-full" id="form-submit">START A CONVERSATION →</button>
+        <div class="form-error" id="form-error" role="alert" aria-live="assertive" hidden style="color:#b91c1c;margin-top:1rem;"></div>
+        <div class="form-manual-email" id="form-manual-email" hidden style="margin-top:0.5rem;font-size:0.95rem;">
+          <a href="mailto:info@ourelads.com" class="cd-value">Email us directly: info@ourelads.com</a>
+        </div>
+        <div class="form-success" id="form-success" aria-live="polite" hidden>
+          <span>✓</span> Thank you! We have received your message and will be in touch shortly.
+        </div>
         </form>
       </div>
     </div>

@@ -832,6 +832,16 @@ async function renderLeads(el, pg = 1, status = '', search = '') {
   if (search) url += `&search=${encodeURIComponent(search)}`;
   const res = await api(url);
   
+  const escapeAttr = (text) => {
+    if (text === null || text === undefined) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
   el.innerHTML = `
     <div class="page-header">
       <div><h1 class="page-title">Contact Messages & Leads</h1><p class="page-subtitle">${res.total} total inquiries</p></div>
@@ -839,8 +849,8 @@ async function renderLeads(el, pg = 1, status = '', search = '') {
     </div>
     
     <div class="toolbar">
-      <input type="text" class="search-input" placeholder="🔍 Search by name, email, company..." value="${search}" onkeyup="if(event.key==='Enter') renderLeads(document.getElementById('pageContent'), 1, '${status}', this.value)">
-      <select onchange="renderLeads(document.getElementById('pageContent'), 1, this.value, '${search}')">
+      <input type="text" class="search-input" placeholder="🔍 Search by name, email, company..." value="${escapeAttr(search)}" onkeyup="if(event.key==='Enter') renderLeads(document.getElementById('pageContent'), 1, '${escapeAttr(status)}', this.value)">
+      <select onchange="renderLeads(document.getElementById('pageContent'), 1, this.value, '${escapeAttr(search)}')">
         <option value="">All Status Filter</option>
         <option value="new" ${status==='new'?'selected':''}>New</option>
         <option value="contacted" ${status==='contacted'?'selected':''}>Contacted</option>
@@ -858,14 +868,14 @@ async function renderLeads(el, pg = 1, status = '', search = '') {
             <thead><tr><th>Name</th><th>Email</th><th>Service Needed</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
             <tbody>
               ${res.data.length ? res.data.map(l => `<tr>
-                <td><strong>${l.name}</strong>${l.company ? `<br><small style="color:var(--text-muted)">${l.company}</small>` : ''}</td>
-                <td>${l.email}</td>
-                <td>${l.service || '-'}</td>
-                <td><span class="badge badge-${l.status}">${l.status}</span></td>
-                <td>${timeAgo(l.created_at)}</td>
+                <td><strong>${escapeHtml(l.name)}</strong>${l.company ? `<br><small style="color:var(--text-muted)">${escapeHtml(l.company)}</small>` : ''}</td>
+                <td>${escapeHtml(l.email)}</td>
+                <td>${escapeHtml(l.service || '-')}</td>
+                <td><span class="badge badge-${escapeAttr(l.status || '')}">${escapeHtml(l.status || '')}</span></td>
+                <td>${escapeHtml(timeAgo(l.created_at))}</td>
                 <td><div class="btn-group">
-                  <button class="btn btn-ghost btn-xs" onclick="viewLead(${l.id})">👁️ View Message</button>
-                  <button class="btn btn-danger btn-xs" onclick="deleteLead(${l.id})">🗑️ Delete</button>
+                  <button class="btn btn-ghost btn-xs" onclick="viewLead(${Number(l.id)})">👁️ View Message</button>
+                  <button class="btn btn-danger btn-xs" onclick="deleteLead(${Number(l.id)})">🗑️ Delete</button>
                 </div></td>
               </tr>`).join('') : '<tr><td colspan="6"><div class="empty-state"><p>No lead messages found</p></div></td></tr>'}
             </tbody>
@@ -877,8 +887,8 @@ async function renderLeads(el, pg = 1, status = '', search = '') {
     ${res.totalPages > 1 ? `<div class="pagination">
       <span>Page ${res.page} of ${res.totalPages}</span>
       <div class="pagination-btns">
-        <button ${res.page<=1?'disabled':''} onclick="renderLeads(document.getElementById('pageContent'), ${res.page-1}, '${status}', '${search}')">← Prev</button>
-        <button ${res.page>=res.totalPages?'disabled':''} onclick="renderLeads(document.getElementById('pageContent'), ${res.page+1}, '${status}', '${search}')">Next →</button>
+        <button ${res.page<=1?'disabled':''} onclick="renderLeads(document.getElementById('pageContent'), ${res.page-1}, '${escapeAttr(status)}', '${escapeAttr(search)}')">← Prev</button>
+        <button ${res.page>=res.totalPages?'disabled':''} onclick="renderLeads(document.getElementById('pageContent'), ${res.page+1}, '${escapeAttr(status)}', '${escapeAttr(search)}')">Next →</button>
       </div>
     </div>` : ''}
   `;
@@ -886,27 +896,29 @@ async function renderLeads(el, pg = 1, status = '', search = '') {
 
 async function viewLead(id) {
   const l = await api(`/admin/leads/${id}`);
+  const safe = (v) => escapeHtml(v == null || v === '' ? '-' : v);
+  const safeMsg = escapeHtml(l.message || '').replace(/\n/g, '<br>');
   openEditorModal('Lead Inquiries Details', `
     <div class="detail-grid">
-      <div class="detail-item"><label>Name</label><p><strong>${l.name}</strong></p></div>
-      <div class="detail-item"><label>Email</label><p>${l.email}</p></div>
-      <div class="detail-item"><label>Phone</label><p>${l.phone || '-'}</p></div>
-      <div class="detail-item"><label>Company</label><p>${l.company || '-'}</p></div>
-      <div class="detail-item"><label>Service Needed</label><p>${l.service || '-'}</p></div>
-      <div class="detail-item"><label>Estimated Budget</label><p>${l.budget || '-'}</p></div>
+      <div class="detail-item"><label>Name</label><p><strong>${safe(l.name)}</strong></p></div>
+      <div class="detail-item"><label>Email</label><p>${safe(l.email)}</p></div>
+      <div class="detail-item"><label>Phone</label><p>${safe(l.phone || '-')}</p></div>
+      <div class="detail-item"><label>Company</label><p>${safe(l.company || '-')}</p></div>
+      <div class="detail-item"><label>Service Needed</label><p>${safe(l.service || '-')}</p></div>
+      <div class="detail-item"><label>Estimated Budget</label><p>${safe(l.budget || '-')}</p></div>
     </div>
     <div class="form-group" style="margin-top:16px">
       <label>Client Message</label>
       <div style="background:var(--bg-input);padding:14px;border-radius:6px;font-size:0.95rem;line-height:1.5;border:1px solid var(--border)">
-        ${l.message || 'No written message attached.'}
+        ${safeMsg || 'No written message attached.'}
       </div>
     </div>
     <div class="form-row" style="margin-top:16px">
       <div class="form-group"><label>Inquiry Status</label><select name="status">
-        ${['new','contacted','qualified','converted','closed','spam'].map(s => `<option value="${s}" ${l.status===s?'selected':''}>${s.toUpperCase()}</option>`).join('')}
+        ${['new','contacted','qualified','converted','closed','spam'].map(s => `<option value="${s}" ${l.status===s?'selected':''}>${escapeHtml(s.toUpperCase())}</option>`).join('')}
       </select></div>
     </div>
-    <div class="form-group"><label>Internal Notes</label><textarea name="notes" rows="3" placeholder="Add internal follow-up notes here...">${l.notes || ''}</textarea></div>
+    <div class="form-group"><label>Internal Notes</label><textarea name="notes" rows="3" placeholder="Add internal follow-up notes here...">${escapeHtml(l.notes || '')}</textarea></div>
   `, async () => {
     const status = document.querySelector('#editorBody [name="status"]').value;
     const notes = document.querySelector('#editorBody [name="notes"]').value;
@@ -1079,39 +1091,749 @@ async function deleteMedia(id) {
 }
 
 // ═══════════════════════════════════════════
-// SEO & ANALYTICS
+// SEO & ANALYTICS (Global + Per-Page / Blog Posts)
 // ═══════════════════════════════════════════
-async function renderSEO(el) {
-  const settings = await api('/admin/settings');
-  el.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">SEO & Analytics Settings</h1>
-        <p class="page-subtitle">Configure search engine titles, descriptions, and Google Analytics</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <form id="seoForm">
-          <div class="form-group"><label>Website Search Title (Meta Title)</label><input type="text" name="seo_title" value="${settings.seo_title || ''}"><div class="form-help">Appears in Google search result headers</div></div>
-          <div class="form-group"><label>Search Engine Description (Meta Description)</label><textarea name="seo_description" rows="3">${settings.seo_description || ''}</textarea><div class="form-help">1-2 sentence description shown in Google search snippets</div></div>
-          <div class="form-group"><label>Google Analytics ID (GA4)</label><input type="text" name="google_analytics_id" value="${settings.google_analytics_id || ''}" placeholder="G-XXXXXXXXXX"><div class="form-help">e.g. G-123456789</div></div>
-          <div class="form-group"><label>Google Tag Manager ID (GTM)</label><input type="text" name="google_tag_manager_id" value="${settings.google_tag_manager_id || ''}" placeholder="GTM-XXXXXXX"><div class="form-help">e.g. GTM-ABC1234</div></div>
-          <button type="submit" class="btn btn-primary">💾 Save SEO Settings</button>
-        </form>
-      </div>
-    </div>
-  `;
-  document.getElementById('seoForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const body = {};
-    ['seo_title', 'seo_description', 'google_analytics_id', 'google_tag_manager_id'].forEach(k => {
-      body[k] = document.querySelector(`#seoForm [name="${k}"]`).value;
-    });
-    await api('/admin/settings', { method: 'PUT', body });
-    toast('SEO settings saved!');
+const SUPPORTED_PAGE_SEO = [
+  { slug: 'home', label: 'Home', path: '/' },
+  { slug: 'about', label: 'About', path: '/about' },
+  { slug: 'services', label: 'Services', path: '/services' },
+  { slug: 'work', label: 'Work', path: '/work' },
+  { slug: 'blog', label: 'Blog', path: '/blog' },
+  { slug: 'testimonials', label: 'Testimonials', path: '/testimonials' },
+  { slug: 'contact', label: 'Contact', path: '/contact' },
+];
+const SUPPORTED_PAGE_SEO_SLUGS = new Set(SUPPORTED_PAGE_SEO.map(p => p.slug));
+const SUPPORTED_ROBOTS_DIRECTIVES = [
+  'index, follow',
+  'noindex, follow',
+  'index, nofollow',
+  'noindex, nofollow',
+];
+// Static template metadata used to approximate renderer fallbacks in preview (not page IDs).
+const PAGE_STATIC_SEO_DEFAULTS = {
+  home: { title: 'Ourel Ads — Advertising & Creative Production Agency', description: 'Ourel Ads is an advertising and creative production agency helping brands turn ideas into content that connects, engages and drives action.', ogTitle: 'Ourel Ads — We Build Ideas That Build Brands', ogDescription: 'Advertising • Creative • Marketing • Production. From concept to delivery, we bring the complete creative process under one roof.' },
+  about: { title: 'About Ourel Ads — Advertising & Creative Production', description: 'Ourel Ads is a New Delhi and Bhopal advertising agency founded in 2022. Strategy, creativity and production under one roof.', ogTitle: '', ogDescription: '' },
+  services: { title: 'Services — Ourel Ads', description: 'Brand films, TVCs, performance videos, micro-dramas, social content, motion graphics and digital marketing.', ogTitle: '', ogDescription: '' },
+  work: { title: 'Work — Ourel Ads', description: 'Campaigns and content for Infinix, GoodScore, Seekho, Vyapar, GoCredit, FatakPay, Bachatt, Bansal Group and more.', ogTitle: '', ogDescription: '' },
+  blog: { title: 'Blog — Ourel Ads | Advertising & Creative Production', description: 'Read the latest insights, trends, and thoughts on advertising, performance marketing, and creative production from the team at Ourel Ads.', ogTitle: 'Blog — Ourel Ads', ogDescription: 'Read the latest insights, trends, and thoughts on advertising, performance marketing, and creative production from the team at Ourel Ads.' },
+  testimonials: { title: 'Testimonials — Ourel Ads | What Our Clients Say', description: 'Read testimonials from brands that trust Ourel Ads for advertising, creative production, and performance marketing.', ogTitle: 'Testimonials — Ourel Ads', ogDescription: 'Read testimonials from brands that trust Ourel Ads for advertising, creative production, and performance marketing.' },
+  contact: { title: 'Contact — Ourel Ads', description: 'Start a project with Ourel Ads. Email info@ourelads.com or WhatsApp. New Delhi and Bhopal.', ogTitle: '', ogDescription: '' },
+};
+const CANONICAL_PREVIEW_ORIGIN = 'https://ourelads.com';
+
+let seoState = {
+  settings: {},
+  pages: [],
+  blogPosts: [],
+  projects: [],
+  contentType: 'page', // 'page' | 'blog_post' | 'project'
+  selectedPageId: null,
+  selectedBlogPostId: null,
+  selectedProjectId: null,
+  loadedRecord: null,
+  initialForm: null,
+  dirty: false,
+  loading: false,
+};
+
+function seoEscapeAttr(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function seoGetFormValues() {
+  const g = (name) => {
+    const el = document.querySelector(`#perPageSeoForm [name="${name}"]`);
+    return el ? el.value : '';
+  };
+  return {
+    seo_title: g('seo_title'),
+    meta_description: g('meta_description'),
+    canonical_url: g('canonical_url'),
+    og_title: g('og_title'),
+    og_description: g('og_description'),
+    og_image: g('og_image'),
+    robots: g('robots') || 'index, follow',
   };
 }
+
+function seoNormalizeForCompare(values) {
+  const trim = (v) => (v == null ? '' : String(v).trim());
+  return {
+    seo_title: trim(values.seo_title),
+    meta_description: trim(values.meta_description),
+    canonical_url: trim(values.canonical_url),
+    og_title: trim(values.og_title),
+    og_description: trim(values.og_description),
+    og_image: trim(values.og_image),
+    robots: trim(values.robots) || 'index, follow',
+  };
+}
+
+function seoMarkDirty() {
+  if (!seoState.initialForm) return;
+  const current = seoNormalizeForCompare(seoGetFormValues());
+  seoState.dirty = JSON.stringify(current) !== JSON.stringify(seoNormalizeForCompare(seoState.initialForm));
+  const warn = document.getElementById('seoUnsavedWarning');
+  if (warn) warn.style.display = seoState.dirty ? 'inline-flex' : 'none';
+}
+
+function seoValidateClient(values) {
+  const errors = [];
+  const hasControl = (s) => /[\u0000-\u001F\u007F]/.test(s || '');
+  const isValidUrl = (val, { allowEmpty = true, field }) => {
+    const v = (val || '').trim();
+    if (!v) return allowEmpty ? null : `${field} is required`;
+    if (hasControl(v)) return `${field} contains invalid characters`;
+    let u;
+    try { u = new URL(v); } catch { return `${field} must be a valid URL`; }
+    const proto = u.protocol.toLowerCase();
+    if (proto === 'https:') return null;
+    if (proto === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1' || u.hostname === '::1')) return null;
+    return `${field} must use https:// (http:// allowed only for localhost in development)`;
+  };
+
+  if ((values.seo_title || '').trim().length > 120) errors.push('SEO title should be 120 characters or fewer.');
+  if ((values.meta_description || '').trim().length > 320) errors.push('Meta description should be 320 characters or fewer.');
+  if ((values.og_title || '').trim().length > 120) errors.push('Open Graph title should be 120 characters or fewer.');
+  if ((values.og_description || '').trim().length > 320) errors.push('Open Graph description should be 320 characters or fewer.');
+  if (hasControl(values.seo_title) || hasControl(values.meta_description) || hasControl(values.og_title) || hasControl(values.og_description)) errors.push('Fields contain invalid control characters.');
+  const canonErr = isValidUrl(values.canonical_url, { allowEmpty: true, field: 'Canonical URL' });
+  if (canonErr) errors.push(canonErr);
+  const ogImgErr = isValidUrl(values.og_image, { allowEmpty: true, field: 'Open Graph image URL' });
+  if (ogImgErr) errors.push(ogImgErr);
+  if (!SUPPORTED_ROBOTS_DIRECTIVES.includes(values.robots)) errors.push('Unsupported robots directive.');
+
+  const canon = (values.canonical_url || '').trim();
+  if (canon) {
+    try {
+      const u = new URL(canon);
+      if (u.origin !== CANONICAL_PREVIEW_ORIGIN) errors.push('Warning: custom canonical points to a different domain; ensure this is intentional cross-canonicalization.');
+    } catch {}
+  }
+  return errors;
+}
+
+function seoStripHtmlToText(input) {
+  return String(input == null ? '' : input)
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function seoTruncate(text, maxLen) {
+  const t = String(text || '').trim();
+  if (t.length <= maxLen) return t;
+  return t.slice(0, Math.max(0, maxLen - 1)).trimEnd() + '…';
+}
+
+function seoToAbsoluteUrl(origin, value) {
+  if (!value || typeof value !== 'string') return '';
+  const v = value.trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (v.startsWith('//')) return `https:${v}`;
+  if (v.startsWith('/')) return `${origin}${v}`;
+  return `${origin}/${v.replace(/^\.?\//, '')}`;
+}
+
+function getSelectedSeoItem() {
+  if (seoState.contentType === 'blog_post') {
+    return seoState.blogPosts.find(p => p.id === seoState.selectedBlogPostId) || null;
+  }
+  if (seoState.contentType === 'project') {
+    return seoState.projects.find(p => p.id === seoState.selectedProjectId) || null;
+  }
+  return seoState.pages.find(p => p.id === seoState.selectedPageId) || null;
+}
+
+function seoComputeResolvedPreview(item, formValues) {
+  const o = seoNormalizeForCompare(formValues);
+  const has = (v) => v != null && String(v).trim() !== '';
+  const overrideBadge = '<span class="badge badge-success">Saved override</span>';
+  const inheritedBadge = (label) => `<span class="badge">${escapeHtml(label)}</span>`;
+
+  if (seoState.contentType === 'blog_post') {
+    const slug = encodeURIComponent(String(item.slug || ''));
+    const articlePath = `/blog/${item.slug || ''}`;
+    const fallbackDescSource = item.excerpt || seoStripHtmlToText(item.content) || (seoState.settings.seo_description || '') || '';
+    const inheritedDescription = seoTruncate(fallbackDescSource, 160);
+    const inheritedTitle = item.title ? `${item.title} — Ourel Ads` : ((seoState.settings.seo_title || '').trim() || 'Ourel Ads');
+    const defaultCanonical = `${CANONICAL_PREVIEW_ORIGIN}/blog/${slug}`;
+    const title = has(o.seo_title) ? o.seo_title : inheritedTitle;
+    const description = has(o.meta_description) ? o.meta_description : inheritedDescription;
+    const canonical = has(o.canonical_url) ? o.canonical_url : defaultCanonical;
+    const ogTitle = has(o.og_title) ? o.og_title : title;
+    const ogDescription = has(o.og_description) ? o.og_description : description;
+    const inheritedOgImage = seoToAbsoluteUrl(CANONICAL_PREVIEW_ORIGIN, item.featured_image || '');
+    const ogImage = has(o.og_image) ? o.og_image : inheritedOgImage;
+    const robots = has(o.robots) ? o.robots : 'index, follow';
+    return {
+      title, description, canonical, ogTitle, ogDescription, ogImage, robots,
+      articleUrl: `${CANONICAL_PREVIEW_ORIGIN}${articlePath}`,
+      articlePath,
+      sources: {
+        title: has(o.seo_title) ? overrideBadge : inheritedBadge('Inherited article title/default'),
+        description: has(o.meta_description) ? overrideBadge : inheritedBadge('Inherited excerpt/content/site fallback'),
+        canonical: has(o.canonical_url) ? overrideBadge : inheritedBadge('Inherited default article canonical'),
+        ogTitle: has(o.og_title) ? overrideBadge : inheritedBadge('Inherited title fallback'),
+        ogDescription: has(o.og_description) ? overrideBadge : inheritedBadge('Inherited description fallback'),
+        ogImage: has(o.og_image) ? overrideBadge : (inheritedOgImage ? inheritedBadge('Inherited featured image') : inheritedBadge('No image (inherited/none)')),
+        robots: (o.robots && o.robots !== 'index, follow') ? overrideBadge : inheritedBadge('Inherited default'),
+      }
+    };
+  }
+
+  if (seoState.contentType === 'project') {
+    const slug = String(item.slug || '');
+    const articlePath = `/work/${slug}`;
+    const fallbackDescSource = seoStripHtmlToText(item.description || '') || seoStripHtmlToText(item.full_description || '') || (seoState.settings.seo_description || '') || '';
+    const inheritedDescription = seoTruncate(fallbackDescSource, 160);
+    const inheritedTitle = item.title ? `${item.title} — Ourel Ads` : ((seoState.settings.seo_title || '').trim() || 'Ourel Ads');
+    const defaultCanonical = `${CANONICAL_PREVIEW_ORIGIN}/work/${encodeURIComponent(slug)}`;
+    const entityMeta = (seoState.loadedRecord && seoState.loadedRecord._entity && seoState.loadedRecord._entity.id === item.id) ? seoState.loadedRecord._entity : null;
+    const isMeaningful = entityMeta ? !!entityMeta.isMeaningful : null;
+    const isThin = entityMeta ? !!entityMeta.isThin : null;
+    const inheritedRobots = (entityMeta && entityMeta.inheritedRobots) ? entityMeta.inheritedRobots : 'index, follow';
+    const title = has(o.seo_title) ? o.seo_title : inheritedTitle;
+    const description = has(o.meta_description) ? o.meta_description : inheritedDescription;
+    const canonical = has(o.canonical_url) ? o.canonical_url : defaultCanonical;
+    const ogTitle = has(o.og_title) ? o.og_title : title;
+    const ogDescription = has(o.og_description) ? o.og_description : description;
+    const inheritedOgImage = seoToAbsoluteUrl(CANONICAL_PREVIEW_ORIGIN, item.thumbnail || '');
+    const ogImage = has(o.og_image) ? o.og_image : inheritedOgImage;
+    const robots = has(o.robots) ? o.robots : inheritedRobots;
+    return {
+      title, description, canonical, ogTitle, ogDescription, ogImage, robots,
+      articleUrl: `${CANONICAL_PREVIEW_ORIGIN}${articlePath}`,
+      articlePath,
+      isMeaningful, isThin, inheritedRobots,
+      sources: {
+        title: has(o.seo_title) ? overrideBadge : inheritedBadge('Inherited project title/default'),
+        description: has(o.meta_description) ? overrideBadge : inheritedBadge('Inherited project/site fallback'),
+        canonical: has(o.canonical_url) ? overrideBadge : inheritedBadge('Inherited default project canonical'),
+        ogTitle: has(o.og_title) ? overrideBadge : inheritedBadge('Inherited title fallback'),
+        ogDescription: has(o.og_description) ? overrideBadge : inheritedBadge('Inherited description fallback'),
+        ogImage: has(o.og_image) ? overrideBadge : (inheritedOgImage ? inheritedBadge('Inherited thumbnail image') : inheritedBadge('No image (inherited/none)')),
+        robots: has(o.robots) ? overrideBadge : inheritedBadge(isThin ? 'Inherited default (thin content: noindex, follow)' : 'Inherited default'),
+      }
+    };
+  }
+
+  const slug = item.slug;
+  const staticMeta = PAGE_STATIC_SEO_DEFAULTS[slug] || { title: item.title || 'Ourel Ads', description: '' };
+  const globalTitle = (seoState.settings.seo_title || '').trim();
+  const globalDesc = (seoState.settings.seo_description || '').trim();
+
+  let title = staticMeta.title || 'Ourel Ads';
+  let description = staticMeta.description || '';
+  if (slug === 'home') {
+    title = has(o.seo_title) ? o.seo_title : (globalTitle || staticMeta.title || 'Ourel Ads');
+    description = has(o.meta_description) ? o.meta_description : (globalDesc || staticMeta.description || '');
+  } else {
+    title = has(o.seo_title) ? o.seo_title : (staticMeta.title || globalTitle || 'Ourel Ads');
+    description = has(o.meta_description) ? o.meta_description : (staticMeta.description || globalDesc || '');
+  }
+
+  const robots = has(o.robots) ? o.robots : 'index, follow';
+  const canonical = has(o.canonical_url) ? o.canonical_url : `${CANONICAL_PREVIEW_ORIGIN}${item.path === '/' ? '/' : item.path}`;
+  const ogTitle = has(o.og_title) ? o.og_title : (staticMeta.ogTitle || title);
+  const ogDescription = has(o.og_description) ? o.og_description : (staticMeta.ogDescription || description);
+  const ogImage = has(o.og_image) ? o.og_image : '';
+  return {
+    title, description, canonical, ogTitle, ogDescription, ogImage, robots,
+    articleUrl: `${CANONICAL_PREVIEW_ORIGIN}${item.path === '/' ? '/' : item.path}`,
+    articlePath: item.path,
+    sources: {
+      title: slug === 'home' ? (has(o.seo_title) ? overrideBadge : inheritedBadge(has(globalTitle) ? 'Inherited global/title fallback' : 'Inherited static fallback')) : (has(o.seo_title) ? overrideBadge : inheritedBadge('Inherited static/global fallback')),
+      description: slug === 'home' ? (has(o.meta_description) ? overrideBadge : inheritedBadge(has(globalDesc) ? 'Inherited global/description fallback' : 'Inherited static fallback')) : (has(o.meta_description) ? overrideBadge : inheritedBadge('Inherited static/global fallback')),
+      canonical: has(o.canonical_url) ? overrideBadge : inheritedBadge('Inherited default (trusted origin)'),
+      ogTitle: has(o.og_title) ? overrideBadge : inheritedBadge('Inherited title/static fallback'),
+      ogDescription: has(o.og_description) ? overrideBadge : inheritedBadge('Inherited description/static fallback'),
+      ogImage: has(o.og_image) ? overrideBadge : inheritedBadge('No image (inherited/none)'),
+      robots: (o.robots && o.robots !== 'index, follow') ? overrideBadge : inheritedBadge('Inherited default'),
+    }
+  };
+}
+
+function renderSeoPreview() {
+  const box = document.getElementById('perPageSeoPreview');
+  if (!box) return;
+  const item = getSelectedSeoItem();
+  if (!item) { box.innerHTML = '<div class="empty-state"><p>Select an item to preview.</p></div>'; return; }
+  const values = seoGetFormValues();
+  const r = seoComputeResolvedPreview(item, values);
+  const imgPreview = r.ogImage
+    ? `<div style="margin-top:8px"><img src="${seoEscapeAttr(r.ogImage)}" alt="OG preview" style="max-width:220px;max-height:120px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" onerror="this.style.display='none'"></div>`
+    : `<div class="form-help" style="margin-top:6px">No OG image set (will use inherited/default behavior).</div>`;
+  const urlLabel = seoState.contentType === 'project' ? 'Project URL' : 'Article URL';
+  let thinNotice = '';
+  if (seoState.contentType === 'project') {
+    const cls = r.isThin ? 'var(--warning, #b45309)' : 'var(--success, #15803d)';
+    const statusText = r.isThin ? 'Thin content (server classification)' : 'Meaningful content (server classification)';
+    const inheritedText = r.inheritedRobots ? `Inherited robots default: <strong>${escapeHtml(r.inheritedRobots)}</strong>.` : 'Inherited robots default unavailable until loaded.';
+    const warnIndex = r.isThin && r.robots === 'index, follow' ? `<div style="margin-top:8px;color:var(--danger, #dc2626)">Warning: choosing <code>index, follow</code> for thin projects may index low-value content. Save requires explicit confirmation.</div>` : '';
+    thinNotice = `<div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-elevated, #f8fafc)"><div style="font-weight:600;color:${cls}">${statusText}</div><div class="form-help" style="margin-top:4px">${inheritedText}</div>${warnIndex}</div>`;
+  }
+  box.innerHTML = `
+    <div class="card" style="margin-top:16px">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h3 style="margin:0">SEO Preview (unsaved edits shown, not live)</h3>
+        <span class="form-help">Preview approximates server renderer fallback behavior</span>
+      </div>
+      <div class="card-body" style="display:grid;gap:12px">
+        ${thinNotice}
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">${urlLabel}</label><div style="word-break:break-all">${escapeHtml(r.articleUrl || r.articlePath || '')}</div></div>
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">Resolved title ${r.sources.title}</label><div>${escapeHtml(r.title)}</div></div>
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">Resolved meta description ${r.sources.description}</label><div>${escapeHtml(r.description || '(empty)')}</div></div>
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">Canonical URL ${r.sources.canonical}</label><div style="word-break:break-all">${escapeHtml(r.canonical)}</div></div>
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">Open Graph title ${r.sources.ogTitle}</label><div>${escapeHtml(r.ogTitle)}</div></div>
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">Open Graph description ${r.sources.ogDescription}</label><div>${escapeHtml(r.ogDescription || '(empty)')}</div></div>
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">Open Graph image ${r.sources.ogImage}</label><div style="word-break:break-all">${escapeHtml(r.ogImage || '(none)')}</div>${imgPreview}</div>
+        <div><label style="display:block;font-weight:600;margin-bottom:4px">Robots directive ${r.sources.robots}</label><div>${escapeHtml(r.robots)}</div></div>
+      </div>
+    </div>`;
+}
+
+function seoFieldCounter(id, max) {
+  const el = document.querySelector(`#perPageSeoForm [name="${id}"]`);
+  const counter = document.getElementById(`counter_${id}`);
+  if (el && counter) {
+    const len = (el.value || '').length;
+    counter.textContent = `${len}/${max}`;
+    counter.style.color = len > max ? 'var(--danger, #dc2626)' : 'var(--text-muted)';
+  }
+}
+
+function bindPerPageSeoFormEvents() {
+  const form = document.getElementById('perPageSeoForm');
+  if (!form) return;
+  form.querySelectorAll('input, textarea, select').forEach(el => {
+    el.addEventListener('input', () => { seoMarkDirty(); renderSeoPreview(); ['seo_title','meta_description','og_title','og_description'].forEach(f => { const max = (f.includes('description') ? 320 : 120); if (el.name === f) seoFieldCounter(f, max); }); });
+    el.addEventListener('change', () => { seoMarkDirty(); renderSeoPreview(); });
+  });
+  ['seo_title','meta_description','og_title','og_description'].forEach(f => seoFieldCounter(f, f.includes('description') ? 320 : 120));
+}
+
+function seoEntityContext() {
+  if (seoState.contentType === 'blog_post') return { type: 'blog_post', id: seoState.selectedBlogPostId, label: 'blog post' };
+  if (seoState.contentType === 'project') return { type: 'project', id: seoState.selectedProjectId, label: 'project' };
+  return { type: 'page', id: seoState.selectedPageId, label: 'page' };
+}
+
+async function loadPerPageSeoRecord(nextId, { force = false } = {}) {
+  const ctx = seoEntityContext();
+  if (!nextId) return;
+  if (!force && seoState.dirty) {
+    const ok = await confirmAction('Unsaved changes', 'You have unsaved SEO changes. Discard them and switch items?');
+    if (!ok) {
+      const sel = document.getElementById('perPageSeoSelect');
+      if (sel) sel.value = String(ctx.id || '');
+      return;
+    }
+  }
+  if (ctx.type === 'blog_post') seoState.selectedBlogPostId = nextId;
+  else if (ctx.type === 'project') seoState.selectedProjectId = nextId;
+  else seoState.selectedPageId = nextId;
+  const container = document.getElementById('perPageSeoEditorContainer');
+  if (container) container.innerHTML = '<div class="loading-state">Loading SEO...</div>';
+  try {
+    const record = await api(`/admin/seo/${ctx.type}/${nextId}`);
+    seoState.loadedRecord = record || {};
+    renderPerPageSeoEditor();
+  } catch (e) {
+    if (container) container.innerHTML = `<div class="empty-state"><h3>Error</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderPerPageSeoEditor() {
+  const container = document.getElementById('perPageSeoEditorContainer');
+  if (!container) return;
+  const item = getSelectedSeoItem();
+  const isBlog = seoState.contentType === 'blog_post';
+  const isProject = seoState.contentType === 'project';
+  if (!item) {
+    const noneTitle = isProject ? 'published projects' : (isBlog ? 'published blog posts' : 'supported pages');
+    const noneHelp = isProject
+      ? 'Only published projects can be edited here. Unpublished projects are excluded.'
+      : (isBlog ? 'Only published blog posts can be edited here. Draft, scheduled, and unpublished posts are excluded.' : 'Only published Home, About, Services, Work, Blog, Testimonials, and Contact pages can be edited here.');
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>No ${noneTitle} available</h3><p>${noneHelp}</p></div>`;
+    return;
+  }
+  const rec = seoState.loadedRecord || {};
+  const val = (v) => seoEscapeAttr(v == null ? '' : v);
+  const entityMeta = rec._entity || null;
+  const inheritedRobotsDefault = entityMeta && entityMeta.inheritedRobots ? entityMeta.inheritedRobots : 'index, follow';
+  const robotsVal = (rec.robots && SUPPORTED_ROBOTS_DIRECTIVES.includes(rec.robots)) ? rec.robots : inheritedRobotsDefault;
+  const hasOverride = !!(rec && rec.id);
+  let heading, sub, restoreLabel, saveLabel;
+  if (isProject) {
+    const brand = item.brand ? ` · ${escapeHtml(item.brand)}` : '';
+    heading = `Project SEO: ${escapeHtml(item.title || 'Untitled')}${brand} <span class="badge">/work/${escapeHtml(item.slug || '')}</span>`;
+    const thinBadge = entityMeta ? (entityMeta.isThin ? '<span class="badge badge-warning">Thin content</span>' : '<span class="badge badge-success">Meaningful content</span>') : '';
+    sub = `Editing project: <strong>${escapeHtml(item.title || 'Untitled')}</strong> (slug: ${escapeHtml(item.slug || '')}, id: ${escapeHtml(String(item.id))}). ${hasOverride ? '<span class="badge badge-success">Saved override exists</span>' : '<span class="badge">Using inherited defaults</span>'} ${thinBadge}<br><span class="form-help">Server-classified readiness: inherited robots default is <strong>${escapeHtml(inheritedRobotsDefault)}</strong>. For thin projects, default is <code>noindex, follow</code>; indexing overrides require explicit confirmation.</span>`;
+    restoreLabel = 'Restore Project SEO Defaults';
+    saveLabel = 'Save Project SEO';
+  } else if (isBlog) {
+    heading = `Blog Post SEO: ${escapeHtml(item.title || 'Untitled')} <span class="badge">/blog/${escapeHtml(item.slug || '')}</span>`;
+    sub = `Editing blog post: <strong>${escapeHtml(item.title || 'Untitled')}</strong> (slug: ${escapeHtml(item.slug || '')}, id: ${escapeHtml(String(item.id))}). ${hasOverride ? '<span class="badge badge-success">Saved override exists</span>' : '<span class="badge">Using inherited defaults</span>'}`;
+    restoreLabel = 'Restore Article SEO Defaults';
+    saveLabel = 'Save Article SEO';
+  } else {
+    heading = `Per-Page SEO: ${escapeHtml(item.label)} <span class="badge">${escapeHtml(item.path)}</span>`;
+    sub = `Editing page record: <strong>${escapeHtml(item.title)}</strong> (slug: ${escapeHtml(item.slug)}). ${hasOverride ? '<span class="badge badge-success">Saved override exists</span>' : '<span class="badge">Using inherited defaults</span>'}`;
+    restoreLabel = 'Restore Page SEO Defaults';
+    saveLabel = 'Save Page SEO';
+  }
+
+  container.innerHTML = `
+    <div class="card" style="margin-top:12px">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0">${heading}</h3>
+          <p class="form-help" style="margin:6px 0 0">${sub}</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="seoUnsavedWarning" class="badge badge-warning" style="display:none">Unsaved changes</span>
+          <button type="button" class="btn btn-ghost" id="restoreSeoDefaultsBtn">${restoreLabel}</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <form id="perPageSeoForm">
+          <div class="form-row">
+            <div class="form-group" style="flex:1">
+              <label>SEO title</label>
+              <input type="text" name="seo_title" maxlength="200" value="${val(rec.seo_title)}" placeholder="Leave blank to use inherited/default title">
+              <div class="form-help"><span id="counter_seo_title">0/120</span> · Recommended: ~50–60 chars (max 120).</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Meta description</label>
+            <textarea name="meta_description" rows="3" maxlength="400" placeholder="Leave blank to use inherited/default description">${val(rec.meta_description)}</textarea>
+            <div class="form-help"><span id="counter_meta_description">0/320</span> · Recommended: ~120–160 chars (max 320).</div>
+          </div>
+          <div class="form-group">
+            <label>Canonical URL</label>
+            <input type="url" name="canonical_url" value="${val(rec.canonical_url)}" placeholder="Leave blank to use trusted default canonical">
+            <div class="form-help">Optional. Use a valid https:// URL. Leave blank to use the trusted renderer default. Cross-domain canonicals are allowed but should be intentional.</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1">
+              <label>Open Graph title</label>
+              <input type="text" name="og_title" maxlength="200" value="${val(rec.og_title)}" placeholder="Leave blank to inherit">
+              <div class="form-help"><span id="counter_og_title">0/120</span></div>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Robots directive</label>
+              <select name="robots">
+                ${SUPPORTED_ROBOTS_DIRECTIVES.map(r => `<option value="${seoEscapeAttr(r)}" ${r === robotsVal ? 'selected' : ''}>${escapeHtml(r)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Open Graph description</label>
+            <textarea name="og_description" rows="3" maxlength="400" placeholder="Leave blank to inherit">${val(rec.og_description)}</textarea>
+            <div class="form-help"><span id="counter_og_description">0/320</span></div>
+          </div>
+          <div class="form-group">
+            <label>Open Graph image URL</label>
+            <input type="url" name="og_image" value="${val(rec.og_image)}" placeholder="https://... (leave blank if none)">
+            <div class="form-help">Optional. Must be a valid https:// URL. Preview updates below (unsaved changes are not live).</div>
+          </div>
+          <div id="perPageSeoValidation" class="form-help" style="margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="submit" class="btn btn-primary" id="savePerPageSeoBtn">💾 ${saveLabel}</button>
+          </div>
+        </form>
+        <div id="perPageSeoPreview"></div>
+      </div>
+    </div>`;
+
+  seoState.initialForm = seoNormalizeForCompare(seoGetFormValues());
+  seoState.dirty = false;
+  bindPerPageSeoFormEvents();
+  renderSeoPreview();
+
+  document.getElementById('perPageSeoForm').onsubmit = savePerPageSeo;
+  document.getElementById('restoreSeoDefaultsBtn').onclick = restorePerPageSeoDefaults;
+}
+
+async function savePerPageSeo(e) {
+  e.preventDefault();
+  const item = getSelectedSeoItem();
+  const ctx = seoEntityContext();
+  if (!item || !ctx.id) return;
+  const values = seoNormalizeForCompare(seoGetFormValues());
+  const issues = seoValidateClient(values);
+  const blocking = issues.filter(x => !x.startsWith('Warning:'));
+  const warnings = issues.filter(x => x.startsWith('Warning:'));
+  const vbox = document.getElementById('perPageSeoValidation');
+  if (vbox) {
+    vbox.innerHTML = issues.length ? issues.map(i => `<div style="color:${i.startsWith('Warning:') ? 'var(--warning, #b45309)' : 'var(--danger, #dc2626)'}">${escapeHtml(i)}</div>`).join('') : '';
+  }
+  if (blocking.length) { toast('Please fix validation errors before saving.', 'error'); return; }
+  if (warnings.length) {
+    const okWarn = await confirmAction('Canonical warning', warnings.join('\n') + '\n\nSave anyway?');
+    if (!okWarn) return;
+  }
+  if (ctx.type === 'project') {
+    const entityMeta = (seoState.loadedRecord && seoState.loadedRecord._entity) || null;
+    const isThin = entityMeta ? !!entityMeta.isThin : false;
+    const currentRobots = (values.robots || '').trim() || 'index, follow';
+    const savedRobots = (seoState.loadedRecord && seoState.loadedRecord.robots) ? String(seoState.loadedRecord.robots).trim() : '';
+    if (isThin && currentRobots === 'index, follow' && savedRobots !== 'index, follow') {
+      const okIndex = await confirmAction('Index thin project?', 'This project is classified as thin content and defaults to "noindex, follow". Setting "index, follow" may index low-value content. Continue and save this indexing override?');
+      if (!okIndex) return;
+    }
+  }
+  const saveBtnLabel = ctx.type === 'blog_post' ? '💾 Save Article SEO' : (ctx.type === 'project' ? '💾 Save Project SEO' : '💾 Save Page SEO');
+  const btn = document.getElementById('savePerPageSeoBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  try {
+    const payload = {
+      seo_title: values.seo_title,
+      meta_description: values.meta_description,
+      canonical_url: values.canonical_url,
+      og_title: values.og_title,
+      og_description: values.og_description,
+      og_image: values.og_image,
+      robots: values.robots,
+    };
+    await api(`/admin/seo/${ctx.type}/${ctx.id}`, { method: 'PUT', body: payload });
+    toast(ctx.type === 'blog_post' ? 'Article SEO saved successfully.' : (ctx.type === 'project' ? 'Project SEO saved successfully.' : 'Page SEO saved successfully.'));
+    await loadPerPageSeoRecord(ctx.id, { force: true });
+  } catch (err) {
+    toast(err.message || 'Failed to save SEO', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = saveBtnLabel; }
+  }
+}
+
+async function restorePerPageSeoDefaults() {
+  const item = getSelectedSeoItem();
+  const ctx = seoEntityContext();
+  if (!item || !ctx.id) return;
+  const label = ctx.type === 'blog_post' ? (item.title || item.slug || 'this article') : (ctx.type === 'project' ? (item.title || item.slug || 'this project') : item.label);
+  const entityNoun = ctx.type === 'blog_post' ? 'blog post' : (ctx.type === 'project' ? 'project' : 'page');
+  const ok = await confirmAction('Restore defaults', `Restore default SEO for ${label}? This removes saved overrides for this ${entityNoun} only. Content will not be deleted.`);
+  if (!ok) return;
+  try {
+    await api(`/admin/seo/${ctx.type}/${ctx.id}`, { method: 'DELETE' });
+    toast(ctx.type === 'blog_post' ? 'Article SEO defaults restored.' : (ctx.type === 'project' ? 'Project SEO defaults restored.' : 'Page SEO defaults restored.'));
+    await loadPerPageSeoRecord(ctx.id, { force: true });
+  } catch (err) {
+    toast(err.message || 'Failed to restore defaults', 'error');
+  }
+}
+
+function renderSeoItemSelectorAndEditor() {
+  const wrap = document.getElementById('perPageSeoSectionBody');
+  if (!wrap) return;
+  const isBlog = seoState.contentType === 'blog_post';
+  const isProject = seoState.contentType === 'project';
+  const items = isProject ? seoState.projects : (isBlog ? seoState.blogPosts : seoState.pages);
+  const selectedId = isProject ? seoState.selectedProjectId : (isBlog ? seoState.selectedBlogPostId : seoState.selectedPageId);
+
+  if (!items.length) {
+    const emptyTitle = isProject ? 'published projects' : (isBlog ? 'published blog posts' : 'editable public pages');
+    const emptyHelp = isProject
+      ? 'Published projects will appear here (unpublished projects are excluded).'
+      : (isBlog ? 'Published blog posts will appear here (drafts and unpublished posts are excluded).' : 'Published Home, About, Services, Work, Blog, Testimonials, and Contact pages are required.');
+    wrap.innerHTML = `
+      <div class="empty-state"><div class="empty-icon">🔍</div><h3>No ${emptyTitle} found</h3><p>${emptyHelp}</p></div>
+    `;
+    return;
+  }
+
+  let options = '';
+  if (isProject) {
+    options = items.map(p => {
+      const brand = p.brand ? ` — ${escapeHtml(p.brand)}` : '';
+      return `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${escapeHtml(p.title || 'Untitled')}${brand} (/work/${escapeHtml(p.slug || '')})</option>`;
+    }).join('');
+  } else if (isBlog) {
+    options = items.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${escapeHtml(p.title || 'Untitled')} (/blog/${escapeHtml(p.slug || '')})</option>`).join('');
+  } else {
+    options = items.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${escapeHtml(p.label)} (${escapeHtml(p.path)})</option>`).join('');
+  }
+
+  const label = isProject ? 'Select published project' : (isBlog ? 'Select published blog post' : 'Select page');
+  const help = isProject
+    ? '<div class="form-help">Only published projects are listed. Numeric project IDs are used for SEO overrides. Project URL shown is the public detail page path.</div>'
+    : (isBlog ? '<div class="form-help">Only published posts are listed. Numeric blog post IDs are used for SEO overrides.</div>' : '');
+
+  wrap.innerHTML = `
+    <div class="form-group" style="max-width:560px">
+      <label for="perPageSeoSelect">${label}</label>
+      <select id="perPageSeoSelect">${options}</select>
+      ${help}
+    </div>
+    <div id="perPageSeoEditorContainer"></div>
+  `;
+
+  const sel = document.getElementById('perPageSeoSelect');
+  sel.onchange = async () => {
+    const nextId = parseInt(sel.value, 10);
+    await loadPerPageSeoRecord(nextId);
+  };
+}
+
+async function switchSeoContentType(nextType) {
+  if (nextType === seoState.contentType) return;
+  if (seoState.dirty) {
+    const ok = await confirmAction('Unsaved changes', 'You have unsaved SEO changes. Discard them and switch content type?');
+    if (!ok) {
+      const sel = document.getElementById('seoContentTypeSelect');
+      if (sel) sel.value = seoState.contentType;
+      return;
+    }
+  }
+  seoState.contentType = nextType;
+  seoState.loadedRecord = null;
+  seoState.initialForm = null;
+  seoState.dirty = false;
+  renderSeoItemSelectorAndEditor();
+  const ctx = seoEntityContext();
+  if (ctx.id) await loadPerPageSeoRecord(ctx.id, { force: true });
+}
+
+async function renderSEO(el) {
+  seoState = { settings: {}, pages: [], blogPosts: [], projects: [], contentType: 'page', selectedPageId: null, selectedBlogPostId: null, selectedProjectId: null, loadedRecord: null, initialForm: null, dirty: false, loading: true };
+  el.innerHTML = '<div class="loading-state">Loading SEO & Analytics settings...</div>';
+  try {
+    const [settingsRows, pagesRes, blogRes, projectRes] = await Promise.all([
+      api('/admin/settings'),
+      api('/admin/pages?limit=200'),
+      api('/admin/blog?status=published&limit=500'),
+      api('/admin/projects?status=published&limit=500'),
+    ]);
+    const settings = Array.isArray(settingsRows)
+      ? Object.fromEntries(settingsRows.map(row => [row.setting_key, row.setting_value]))
+      : (settingsRows || {});
+    const pagesData = Array.isArray(pagesRes?.data) ? pagesRes.data : [];
+    const blogDataRaw = Array.isArray(blogRes?.data) ? blogRes.data : (Array.isArray(blogRes) ? blogRes : []);
+    const projectDataRaw = Array.isArray(projectRes?.data) ? projectRes.data : (Array.isArray(projectRes) ? projectRes : []);
+    const supportedPages = SUPPORTED_PAGE_SEO
+      .map(def => {
+        const page = pagesData.find(p => p && p.slug === def.slug);
+        if (!page) return null;
+        if (page.status !== 'published') return null;
+        const id = parseInt(page.id, 10);
+        if (!Number.isInteger(id) || id <= 0) return null;
+        return { id, slug: def.slug, label: def.label, path: def.path, title: page.title || def.label };
+      })
+      .filter(Boolean);
+    const publishedBlogPosts = blogDataRaw
+      .filter(p => p && p.status === 'published')
+      .map(p => ({ id: parseInt(p.id, 10), title: p.title || 'Untitled', slug: p.slug || '', excerpt: p.excerpt || '', content: p.content || '', featured_image: p.featured_image || '', status: p.status, author: p.author || '', published_at: p.published_at || '' }))
+      .filter(p => Number.isInteger(p.id) && p.id > 0 && p.slug);
+    const publishedProjects = projectDataRaw
+      .filter(p => p && p.status === 'published')
+      .map(p => ({
+        id: parseInt(p.id, 10),
+        title: p.title || 'Untitled',
+        slug: p.slug || '',
+        brand: p.brand || '',
+        description: p.description || '',
+        full_description: p.full_description || '',
+        thumbnail: p.thumbnail || '',
+        images: p.images || '',
+        video_url: p.video_url || '',
+        status: p.status,
+      }))
+      .filter(p => Number.isInteger(p.id) && p.id > 0 && p.slug);
+
+    seoState.settings = settings;
+    seoState.pages = supportedPages;
+    seoState.blogPosts = publishedBlogPosts;
+    seoState.projects = publishedProjects;
+    seoState.selectedPageId = supportedPages.length ? supportedPages[0].id : null;
+    seoState.selectedBlogPostId = publishedBlogPosts.length ? publishedBlogPosts[0].id : null;
+    seoState.selectedProjectId = publishedProjects.length ? publishedProjects[0].id : null;
+
+    el.innerHTML = `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">SEO & Analytics Settings</h1>
+          <p class="page-subtitle">Manage global search settings, analytics IDs, and SEO overrides for public pages, published blog posts, and published projects</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Global SEO & Analytics</h3></div>
+        <div class="card-body">
+          <form id="seoGlobalForm">
+            <div class="form-group"><label>Website Search Title (Meta Title)</label><input type="text" name="seo_title" value="${seoEscapeAttr(settings.seo_title || '')}"><div class="form-help">Appears in Google search result headers</div></div>
+            <div class="form-group"><label>Search Engine Description (Meta Description)</label><textarea name="seo_description" rows="3">${escapeHtml(settings.seo_description || '')}</textarea><div class="form-help">1-2 sentence description shown in Google search snippets</div></div>
+            <div class="form-group"><label>Google Analytics ID (GA4)</label><input type="text" name="google_analytics_id" value="${seoEscapeAttr(settings.google_analytics_id || '')}" placeholder="G-XXXXXXXXXX"><div class="form-help">e.g. G-123456789</div></div>
+            <div class="form-group"><label>Google Tag Manager ID (GTM)</label><input type="text" name="google_tag_manager_id" value="${seoEscapeAttr(settings.google_tag_manager_id || '')}" placeholder="GTM-XXXXXXX"><div class="form-help">e.g. GTM-ABC1234</div></div>
+            <button type="submit" class="btn btn-primary">💾 Save Global SEO Settings</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-header"><h3>Content SEO Overrides</h3></div>
+        <div class="card-body">
+          <p class="form-help" style="margin-top:0">Edit SEO overrides for verified public website pages, published blog posts, and published projects. Leave fields blank to use inherited renderer/entity defaults. Saved changes affect live public HTML after save; preview below shows unsaved edits and is not live.</p>
+          <div class="form-group" style="max-width:320px">
+            <label for="seoContentTypeSelect">Content type</label>
+            <select id="seoContentTypeSelect">
+              <option value="page" ${seoState.contentType === 'page' ? 'selected' : ''}>Website Pages</option>
+              <option value="blog_post" ${seoState.contentType === 'blog_post' ? 'selected' : ''}>Blog Posts</option>
+              <option value="project" ${seoState.contentType === 'project' ? 'selected' : ''}>Projects</option>
+            </select>
+          </div>
+          <div id="perPageSeoSectionBody"></div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('seoGlobalForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const body = {};
+      ['seo_title', 'seo_description', 'google_analytics_id', 'google_tag_manager_id'].forEach(k => {
+        const input = document.querySelector(`#seoGlobalForm [name="${k}"]`);
+        body[k] = input ? input.value : '';
+      });
+      await api('/admin/settings', { method: 'PUT', body });
+      seoState.settings = Object.assign({}, seoState.settings, body);
+      toast('Global SEO settings saved!');
+      renderSeoPreview();
+    };
+
+    document.getElementById('seoContentTypeSelect').onchange = async (e) => {
+      await switchSeoContentType(e.target.value);
+    };
+
+    renderSeoItemSelectorAndEditor();
+    const ctx = seoEntityContext();
+    if (ctx.id) await loadPerPageSeoRecord(ctx.id, { force: true });
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error loading SEO settings</h3><p>${escapeHtml(err.message)}</p></div>`;
+  } finally {
+    seoState.loading = false;
+  }
+}
+
+// Warn on browser navigation if per-page form has unsaved changes
+window.addEventListener('beforeunload', (e) => {
+  if (seoState && seoState.dirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 // ═══════════════════════════════════════════
 // USERS & BACKUP

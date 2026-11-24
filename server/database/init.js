@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const { logger } = require('../utils/logger');
 
-function initDatabase(dbPath) {
+function initDatabase(dbPath, options = {}) {
   let db;
   if (dbPath instanceof Database) {
     db = dbPath;
@@ -20,6 +20,34 @@ function initDatabase(dbPath) {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.pragma('busy_timeout = 5000');
+
+  // Additive idempotency schema (3.7C) requires explicit opt-in to prevent accidental active/shared DB migration.
+  const allowContactIdempotencySchema = !!(options && options.allowContactIdempotencySchema) || process.env.ALLOW_CONTACT_IDEMPOTENCY_SCHEMA === '1';
+  const contactIdempotencySchemaSql = allowContactIdempotencySchema ? `
+    -- Contact submission idempotency (additive, Option B). Requires explicit opt-in.
+    CREATE TABLE IF NOT EXISTS contact_submission_idempotency (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      idempotency_key TEXT NOT NULL UNIQUE,
+      request_fingerprint TEXT NOT NULL,
+      contact_submission_id INTEGER NOT NULL,
+      confirmation_token_hash TEXT,
+      confirmation_expires_at DATETIME,
+      confirmation_consumed_at DATETIME,
+      conversion_eligible INTEGER NOT NULL DEFAULT 1,
+      conversion_fired_at DATETIME,
+      notify_email_state TEXT NOT NULL DEFAULT 'pending',
+      notify_email_attempted_at DATETIME,
+      notify_email_sent_at DATETIME,
+      notify_email_last_error TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (contact_submission_id) REFERENCES contact_submissions(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_csi_submission_id ON contact_submission_idempotency(contact_submission_id);
+    CREATE INDEX IF NOT EXISTS idx_csi_confirmation_expires_at ON contact_submission_idempotency(confirmation_expires_at);
+    CREATE INDEX IF NOT EXISTS idx_csi_created_at ON contact_submission_idempotency(created_at);
+  ` : '';
 
   // ─── CREATE TABLES ───
   db.exec(`
@@ -497,6 +525,8 @@ function initDatabase(dbPath) {
     CREATE INDEX IF NOT EXISTS idx_revisions_entity ON revisions(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_seo_entity ON seo_metadata(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_nav_location ON navigation_items(location);
+
+    ${contactIdempotencySchemaSql}
   `);
 
   try {

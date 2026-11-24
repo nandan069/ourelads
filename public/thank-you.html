@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank You — Ourel Ads</title>
+  <meta name="description" content="Thank you for contacting Ourel Ads. We have received your enquiry." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://ourelads.com/thank-you" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="thank-you">
+  <!-- GTM noscript intentionally omitted: optional tracking must not load without an approved JS-disabled consent mechanism (3.7D-2B). -->
+<div id="site-header"></div>
+  <main id="main-content">
+    <section class="page-hero thank-you-hero">
+      <div class="page-hero-bg">
+        <picture>
+          <source srcset="hero_bg.webp" type="image/webp" />
+          <img src="hero_bg.jpg" alt="" width="1376" height="768" decoding="async" fetchpriority="high" />
+        </picture>
+        <div class="page-hero-overlay"></div>
+      </div>
+      <div class="page-hero-content container">
+        <div class="hero-eyebrow">
+          <span class="hero-eyebrow-line"></span>
+          <span class="hero-eyebrow-text">Enquiry status</span>
+        </div>
+        <h1 id="thank-you-title">Thank you</h1>
+        <p class="page-lead" id="thank-you-lead">Checking your enquiry confirmation…</p>
+      </div>
+    </section>
+    <section class="page-section thank-you-section">
+      <div class="container">
+        <div class="thank-you-card" id="thank-you-card" role="status" aria-live="polite">
+          <p id="thank-you-body" class="thank-you-body">Please wait a moment.</p>
+          <div class="thank-you-actions">
+            <a href="/" class="btn btn-purple">Back to Home</a>
+            <a href="/contact" class="btn btn-outline-dark" id="thank-you-contact-link">Contact Us</a>
+          </div>
+        </div>
+        <p class="thank-you-note">This page does not confirm a submission from URL details or browser history alone. Only a recently confirmed enquiry shows a confirmed message.</p>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script src="layout.js"></script>
+  <script src="main.js"></script>
+  <script>
+    (function () {
+      var CONFIRM_KEY = 'ourelads.contact.confirmation.v1';
+      var titleEl = document.getElementById('thank-you-title');
+      var leadEl = document.getElementById('thank-you-lead');
+      var bodyEl = document.getElementById('thank-you-body');
+      var contactLink = document.getElementById('thank-you-contact-link');
+
+      function setGeneric() {
+        if (titleEl) titleEl.textContent = 'Thanks for visiting';
+        if (leadEl) leadEl.textContent = 'If you just submitted the contact form, your confirmation will appear here only after a confirmed save.';
+        if (bodyEl) bodyEl.textContent = 'No confirmed enquiry was found for this visit. You can start a new enquiry or return to the homepage.';
+        if (contactLink) contactLink.textContent = 'Start an Enquiry';
+      }
+      function setConfirmed() {
+        if (titleEl) titleEl.textContent = 'Thank you — we’ve received your enquiry';
+        if (leadEl) leadEl.textContent = 'Your message was confirmed as saved. Our team will be in touch shortly.';
+        if (bodyEl) bodyEl.textContent = 'If you need to share anything else, you can send another message from the contact page.';
+        if (contactLink) contactLink.textContent = 'Send Another Message';
+      }
+      function setUnavailable() {
+        if (titleEl) titleEl.textContent = 'Thank you';
+        if (leadEl) leadEl.textContent = 'We could not verify your confirmation right now.';
+        if (bodyEl) bodyEl.textContent = 'If you recently submitted the form, please check back shortly or contact us directly if needed. No confirmation details are shown here.';
+      }
+
+      function readToken() {
+        try {
+          if (!window.sessionStorage) return null;
+          var raw = sessionStorage.getItem(CONFIRM_KEY);
+          if (!raw) return null;
+          var obj = JSON.parse(raw);
+          return obj && typeof obj.token === 'string' ? obj.token : null;
+        } catch (_) { return null; }
+      }
+      function clearToken() {
+        try { if (window.sessionStorage) sessionStorage.removeItem(CONFIRM_KEY); } catch (_) {}
+      }
+
+      var token = readToken();
+      if (!token) { setGeneric(); return; }
+
+      fetch('/api/contact/confirmation-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) { return { ok: res.ok, data: data || {} }; });
+      }).then(function (result) {
+        var data = result.data || {};
+        if (data.valid === true && data.state === 'confirmed') {
+          setConfirmed();
+          // Keep session token client-side only for refresh-safe confirmation within this session; server remains source of truth.
+          return;
+        }
+        if (data.state === 'expired' || data.state === 'invalid' || data.valid === false) {
+          clearToken();
+          setGeneric();
+          return;
+        }
+        setUnavailable();
+      }).catch(function () {
+        // Do not treat transient validation failure as proof either way; keep token and show generic-safe unavailable copy.
+        setUnavailable();
+      });
+    })();
+  </script>
+</body>
+</html>
