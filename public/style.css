@@ -143,11 +143,9 @@ ul {
 [data-animate] {
   opacity: 0;
   transform: translateY(36px);
-  filter: blur(5px);
   transition: opacity 0.85s var(--ease-out),
-              transform 0.85s var(--ease-out),
-              filter 0.85s var(--ease-out);
-  will-change: opacity, transform, filter;
+              transform 0.85s var(--ease-out);
+  will-change: opacity, transform;
 }
 [data-animate="fade-right"] { transform: translateX(-36px); }
 [data-animate="fade-left"]  { transform: translateX(36px); }
@@ -155,7 +153,6 @@ ul {
 [data-animate].visible {
   opacity: 1;
   transform: none;
-  filter: blur(0px);
 }
 
 @media (max-width: 768px) {
